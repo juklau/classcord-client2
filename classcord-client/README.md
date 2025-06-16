@@ -39,6 +39,7 @@
 4. **Organisation des packages dans VSCode** :
 
     J'ai créé la structure suivante:
+    ```
       classcord-client/
         ├── src/
         │   ├── main/
@@ -53,7 +54,7 @@
         │   │   │   │   │   ├── app/
         │   │   │   │   │   │   ├── Main.java
         ├── pom.xml
-
+```
         Puis j'ai créé les constructors, les getters et les setters dans les classe Message, et User
 
 5. **Compilation du projet** :
