@@ -25,11 +25,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>20231013</version>
-      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -45,6 +41,17 @@
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
     </dependency>
+  
+    <dependency>
+      <groupId>com.viaoa</groupId>
+      <artifactId>oa-web</artifactId>
+      <version>3.7.4</version>
+    </dependency>
+    <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20231013</version>
+      </dependency>
   </dependencies>
 
   <build>
