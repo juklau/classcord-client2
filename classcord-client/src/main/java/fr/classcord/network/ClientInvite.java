@@ -7,7 +7,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-import org.json.JSONObject; //??????????
+import fr.classcord.model.Message;
+
+
 
 // import org.json.JSONObject; //maven-ben benne van??? à faire quoi?
 
@@ -22,20 +24,15 @@ public class ClientInvite {
 
 
     //Constructeur
-    // public ClientInvite(String pseudo){
-    //     this.pseudo = pseudo;
-
-    // }
-
-    public ClientInvite(){
-        
+    public ClientInvite(String pseudo){
+        this.pseudo = pseudo;
     }
 
 
     //méthodes
 
     //Connexion au serveur
-    public void connect(String ip, int port){
+    public boolean connect(String ip, int port){
         
         try {
             //création une connexion TCP entre client et serveur
@@ -48,41 +45,31 @@ public class ClientInvite {
             //lire les messages envoyés par le serveur
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            System.out.println("Connextez au serveur" + ip + ":" + port);
+            System.out.println("Connexté au serveur" + ip + ":" + port);
 
             //démarrer le thread de réception des messages en parallele, en arrière plan
             //écoute les messages entrant envoyés par le servuer
             new Thread(this::listenForMessages).start();
+            return true;
 
             //lire les messages depuis la console
-            startChat();
+            // startChat();
             
         } catch (IOException e) {
             System.out.println("Promblème pendant la connexion au servuer: " + e.getMessage());
+            return false; //échec de la connexion
         }
-        
     }
 
-    //envoie d'un message au format JSON depuis la console
-    public void send(String messageText){
-        JSONObject message = new JSONObject();
-        message.put("type", "message");
-        message.put("subtype", "global");
-        message.put("to", "global");
-        message.put("from", pseudo);
-        message.put("content", messageText);
-
-        //envoyer le message => transformer l'objet JSON en String
-        writer.println(message.toString());
-    }
-
+   
     //Gestion de la réception des messages
     private void listenForMessages(){
-        String line;
+        
         try {
+            String line;
             //!socket.isClosed() => la connexion est encore active
             //line = reader.readLine()) != null =>il y a texte envoyée par le serveur
-            while(!socket.isClosed() && (line = reader.readLine()) != null){
+            while(!socket.isClosed() && (line = reader.readLine()) != null && socket !=null){
                 System.out.println("Message reçu " + line);
             }   
         } catch (IOException e) {
@@ -91,38 +78,58 @@ public class ClientInvite {
         }
     }
 
-    //pour envoyer plusieurs messages sans bloquer l'application
-    private void startChat(){
-        //permet de lire les entrées utilisateur depuis la console
-        //à la fin de l'exécution de la methode, le scanner fermera automatiquement
-        try (Scanner scanner = new Scanner(System.in)) {
-            while (true) { 
-                System.out.println("Entrez le message :");
-                String messageText = scanner.nextLine();
+     //envoie d'un message au format JSON au serveur
+    public void sendMessage(String messageText){
+        //PREMIER EXERCICE
+        // JSONObject message = new JSONObject();
+        // message.put("type", "message");
+        // message.put("subtype", "global");
+        // message.put("to", "global");
+        // message.put("from", pseudo);
+        // message.put("content", messageText);
 
-                //en tapant "exit" la connexion au serveur est fermée
-                //equalsIgnoreCase() =>comparation de la chaîne sans tenir compte des majuscules et minuscules
-                if("exit".equalsIgnoreCase(messageText)){
-                    System.out.println("Déconnexion");
-                    socket.close();
-                    break;
-                }
-                send(messageText);
-            }
-        } catch (IOException e) {
-            System.out.println("Erreur lors de la fermeture de la connexion: " + e.getMessage());
+        //convertir et envoyer sous forme de JSON
+        if(writer != null && socket != null && !socket.isClosed()){
+            Message message = new Message("message", "global", pseudo, "global", messageText, "");
+            writer.println(message.toJson().toString());
+        }else{
+            System.err.println("Impossible d'envoyer le message : connexion fermée.\n");
         }
-
+       
     }
+
+    //pour envoyer plusieurs messages sans bloquer l'application
+    // private void startChat(){
+    //     //permet de lire les entrées utilisateur depuis la console
+    //     //à la fin de l'exécution de la methode, le scanner fermera automatiquement
+    //     try (Scanner scanner = new Scanner(System.in)) {
+    //         while (true) { 
+    //             System.out.println("Entrez le message :");
+    //             String messageText = scanner.nextLine();
+
+    //             //en tapant "exit" la connexion au serveur est fermée
+    //             //equalsIgnoreCase() =>comparation de la chaîne sans tenir compte des majuscules et minuscules
+    //             if("exit".equalsIgnoreCase(messageText)){
+    //                 System.out.println("Déconnexion");
+    //                 socket.close();
+    //                 break;
+    //             }
+    //             send(messageText);
+    //         }
+    //     } catch (IOException e) {
+    //         System.out.println("Erreur lors de la fermeture de la connexion: " + e.getMessage());
+    //     }
+
+    // }
 
     //Méthode principale (console)
    public static void main(String[] args) {
         //objet "client" => pour la gestion de la connexion et l'envoir de messages au serveur
-        ClientInvite client = new ClientInvite();
-
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("Entrez votre pseudo : ");
-            client.pseudo = scanner.nextLine();
+            String pseudo = scanner.nextLine();
+
+            ClientInvite client = new ClientInvite(pseudo);
 
             //à quel adresse IP veut se connecter
             System.out.print("Entrez IP du serveur : ");

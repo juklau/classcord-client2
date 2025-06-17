@@ -1,5 +1,7 @@
 package fr.classcord.model;
 
+import org.json.JSONObject;
+
 public class Message{
     public String type;
     public String subtype;
@@ -13,9 +15,9 @@ public class Message{
      // Constructeurs
 
     //constructeur vide => il faut utiliser les setter
-    public Message(){
+    // public Message(){
 
-    }
+    // }
 
     public Message(String type, String subtype, String from, String to, String content, String timestamp){
         this.type = type;
@@ -26,7 +28,10 @@ public class Message{
         this.timestamp = timestamp;
     }
 
-    public Message(String content){
+    public Message(String type, String subtype, String from, String content){
+        this.type = type;
+        this.subtype = subtype;
+        this.from = from;
         this.content = content;
     }
 
@@ -110,6 +115,34 @@ public class Message{
         '}';
     }
 
+    //convertir l'objet message en JSONObject
+    public JSONObject toJson(){
+        JSONObject json = new JSONObject();
+        json.put("type" , type);
+        json.put("subtype" , subtype);
+        json.put("from", from);
+        json.put("to", to);
+        json.put("content", content);
+        json.put("timestamp", timestamp);
+
+        return json;
+    }
+
+    //Convertir une chaîne JSON en objet Message
+    public Message fromJson(String jsonString){
+        JSONObject json = new JSONObject(jsonString);
+        return new Message(
+            
+            json.getString("type"),
+            // json.getString("subtype"),
+            "global",
+            json.getString("from"),
+            // json.getString("to"),
+            "global",
+            json.getString("content"),
+            json.getString("timestamp")
+        );
+    }
 
 
 }
