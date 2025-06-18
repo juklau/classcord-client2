@@ -1,13 +1,17 @@
 package fr.classcord.network;
 
-import java.io.BufferedReader;
+import java.io.BufferedReader; //pour recevoir les messages
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.PrintWriter; //pour envoyer les messages
 import java.net.Socket;
 import java.util.Scanner;
 
+import javax.swing.SwingUtilities;
+
 import fr.classcord.model.Message;
+import fr.classcord.ui.ChatInterface;
+import fr.classcord.ui.ChatInterfacePerso;
 
 
 
@@ -17,11 +21,17 @@ public class ClientInvite {
 
     //propriétés
     private Socket socket;
+    
     private PrintWriter writer;
     private BufferedReader reader;
     private String pseudo;
+    private String lastMessage = "";
+    private ChatInterface chatInterface;
+    private ChatInterfacePerso chatInterfacePerso;
+    // private MessageListener messageListener;
 
-
+    
+    
 
     //Constructeur
     public ClientInvite(String pseudo){
@@ -38,55 +48,81 @@ public class ClientInvite {
             //création une connexion TCP entre client et serveur
             socket = new Socket(ip, port); 
 
-            //envoyer des messages au serveur
+            //envoyer des messages, des données au serveur
             //autoFlush: true =>immédiaement envoyés sans besoin d'appeler flush() manuellement
             writer = new PrintWriter(socket.getOutputStream(), true);
 
-            //lire les messages envoyés par le serveur
+            //lire les messages envoyés par le serveur (ligne par ligne)
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            System.out.println("Connexté au serveur" + ip + ":" + port);
-
-            //démarrer le thread de réception des messages en parallele, en arrière plan
-            //écoute les messages entrant envoyés par le servuer
-            new Thread(this::listenForMessages).start();
+            System.out.println("Connexté au serveur " + ip + " : " + port);
             return true;
-
-            //lire les messages depuis la console
-            // startChat();
-            
+           
         } catch (IOException e) {
             System.out.println("Promblème pendant la connexion au servuer: " + e.getMessage());
-            return false; //échec de la connexion
+
+            try {
+                //fermeture de la connexion en cas d'échec
+                if(socket != null){
+                    socket.close(); 
+                    //une connexion TCP ouvert consomme la mémoire et bloque les ports de réseau!!
+                }
+    
+            } catch (IOException closException) {
+                System.out.println("Erreur pendant la fermeture de la connexion " + closException);
+            }
+            return false;
         }
     }
 
+
+    // public void setChatInterface(ChatInterface chatInterface){
+    //     this.chatInterface = chatInterface;
+    //     this.chatInterfacePerso = null; //désactiver chatInterfacePerso
+    // }
+
+    // public void setChatInterfacePerso(ChatInterfacePerso chatInterfacePerso){
+    //     this.chatInterfacePerso = chatInterfacePerso;
+    //     this.chatInterface = null; // désactiver chatInterface
+    // }
    
     //Gestion de la réception des messages
-    private void listenForMessages(){
-        
-        try {
-            String line;
-            //!socket.isClosed() => la connexion est encore active
-            //line = reader.readLine()) != null =>il y a texte envoyée par le serveur
-            while(!socket.isClosed() && (line = reader.readLine()) != null && socket !=null){
-                System.out.println("Message reçu " + line);
-            }   
-        } catch (IOException e) {
-            // socket.isClosed();
-            System.err.println("Connexion interrompu ou erreur de lecture: " + e.getMessage());
-        }
+    public void listenForMessages(){
+         new Thread(() -> {
+            try {
+                String line;
+                //!socket.isClosed() => la connexion est encore active
+                //line = reader.readLine()) != null =>il y a texte envoyée par le serveur
+                while(!socket.isClosed() && socket !=null){
+                    if((line = reader.readLine()) != null){
+                        lastMessage = line;
+                        System.out.println("Message reçu " + line);
+
+                        SwingUtilities.invokeLater(() -> {
+                            if (chatInterfacePerso != null && chatInterfacePerso.isVisible()) {
+                                chatInterfacePerso.afficheMessage();
+                            } else if (chatInterface != null && chatInterface.isVisible()) {
+                                chatInterface.afficheMessage();
+                            }
+                        });
+                    }else{
+                        break; //si le serveur ferme la connexion
+                    }
+                }   
+            } catch (IOException e) {
+                // socket.isClosed();
+                System.err.println("Connexion interrompu ou erreur de lecture: " + e.getMessage());
+            }
+        }).start();
     }
 
      //envoie d'un message au format JSON au serveur
     public void sendMessage(String messageText){
-        //PREMIER EXERCICE
-        // JSONObject message = new JSONObject();
-        // message.put("type", "message");
-        // message.put("subtype", "global");
-        // message.put("to", "global");
-        // message.put("from", pseudo);
-        // message.put("content", messageText);
+
+        if (pseudo == null || pseudo.isEmpty()) {
+            System.err.println("Erreur : pseudo non défini.");
+            return;
+        }
 
         //convertir et envoyer sous forme de JSON
         if(writer != null && socket != null && !socket.isClosed()){
@@ -98,31 +134,70 @@ public class ClientInvite {
        
     }
 
-    //pour envoyer plusieurs messages sans bloquer l'application
-    // private void startChat(){
-    //     //permet de lire les entrées utilisateur depuis la console
-    //     //à la fin de l'exécution de la methode, le scanner fermera automatiquement
-    //     try (Scanner scanner = new Scanner(System.in)) {
-    //         while (true) { 
-    //             System.out.println("Entrez le message :");
-    //             String messageText = scanner.nextLine();
 
-    //             //en tapant "exit" la connexion au serveur est fermée
-    //             //equalsIgnoreCase() =>comparation de la chaîne sans tenir compte des majuscules et minuscules
-    //             if("exit".equalsIgnoreCase(messageText)){
-    //                 System.out.println("Déconnexion");
-    //                 socket.close();
-    //                 break;
-    //             }
-    //             send(messageText);
-    //         }
-    //     } catch (IOException e) {
-    //         System.out.println("Erreur lors de la fermeture de la connexion: " + e.getMessage());
+    // public boolean sendAuthRequest(String type, String username, String password){
+    //     if (writer == null || socket == null || socket.isClosed()) {
+    //         System.err.println("Erreur : Connexion au serveur requise.");
+    //         return false;
     //     }
 
-    // }
+    //     //création du requete en forme JSON
+    //     JSONObject request = new JSONObject();
+    //     request.put("type", type); //"login" ou "register"
+    //     request.put("username", username);
+    //     request.put("password", password);
 
-    //Méthode principale (console)
+    //     //envoie la requête au serveur
+    //     writer.println(request.toString());
+    //     System.out.println("Requête envoyé: " + request.toString());
+
+    //     try {
+    //         //lire la réponse du serveur
+    //         String reponse = reader.readLine();
+    //         System.out.println("Réponse du serveur : " + reponse); // Debug
+
+    //         //vérification si le "status = OK"
+    //         JSONObject jsonReponse = new JSONObject(reponse);
+    //         boolean authReussi = jsonReponse.has("status") && jsonReponse.getString("status").equals("ok");
+
+    //         if(authReussi){
+    //             System.out.println("Authentification réussi, démarrage du chat...");
+               
+    //         }
+
+    //         return authReussi;
+    //         // return reponse != null && reponse.contains("success"); //ha van vàlasz => true ???
+    //     } catch (IOException e) {
+    //         System.out.println("Erreur pendant la récupération de réponse du serveur");
+    //         return false;
+    //     }
+    // };
+
+    public void setPseudo(String pseudo){ 
+        this.pseudo = pseudo;
+    }
+
+    public String getPseudo(){
+        return pseudo;
+    }
+
+    public String getLastMessage(){
+        return lastMessage;
+    }
+
+    public void send(String message) {
+        writer.println(message);
+    }
+
+    
+    public BufferedReader getIn() {
+        return reader;
+    }
+
+   
+
+    //Premièr jour:16 juin 25 =>peut être mettre en commentaire
+    //Méthode principale pour la console
    public static void main(String[] args) {
         //objet "client" => pour la gestion de la connexion et l'envoir de messages au serveur
         try (Scanner scanner = new Scanner(System.in)) {
@@ -147,5 +222,14 @@ public class ClientInvite {
     }
 
 
-    //IP Nedj: 10.0.108.81
+     // Interface pour le callback de réception de message
+    // public interface MessageListener {
+    //     void onMessage(String message);
+    // }
+
+    // public void setMessageListener(MessageListener listener) {
+    //     this.messageListener = listener;
+    // }
+
+
 }

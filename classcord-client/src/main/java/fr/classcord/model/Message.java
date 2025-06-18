@@ -129,20 +129,23 @@ public class Message{
     }
 
     //Convertir une chaîne JSON en objet Message
-    public Message fromJson(String jsonString){
+    public static Message fromJson(String jsonString){
         JSONObject json = new JSONObject(jsonString);
         return new Message(
             
             json.getString("type"),
-            // json.getString("subtype"),
-            "global",
+            json.optString("subtype", "global"), //gestion de l'absence de subtype
             json.getString("from"),
-            // json.getString("to"),
-            "global",
+            json.optString("to", "global"), //gestion de l'absence de to
             json.getString("content"),
             json.getString("timestamp")
         );
     }
+
+    // Explication
+    // si je mets pas en mode static, il faudrait écrire comme ca:
+    //     Message msg = new Message();
+    //     Message converted = msg.fromJson(jsonString); // INUTILE
 
 
 }
