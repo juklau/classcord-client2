@@ -22,7 +22,6 @@ public class User {
     }
 
 
-
     // getters/setters
     public String getUsername() {
         return this.username;
@@ -122,8 +121,6 @@ public class User {
 		return response;
 	}
 
-
-    
 
     //toujours faire toString
     @Override

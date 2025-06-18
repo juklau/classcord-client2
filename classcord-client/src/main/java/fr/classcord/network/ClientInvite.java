@@ -76,15 +76,15 @@ public class ClientInvite {
     }
 
 
-    // public void setChatInterface(ChatInterface chatInterface){
-    //     this.chatInterface = chatInterface;
-    //     this.chatInterfacePerso = null; //désactiver chatInterfacePerso
-    // }
+    public void setChatInterface(ChatInterface chatInterface){
+        this.chatInterface = chatInterface;
+        this.chatInterfacePerso = null; //désactiver chatInterfacePerso
+    }
 
-    // public void setChatInterfacePerso(ChatInterfacePerso chatInterfacePerso){
-    //     this.chatInterfacePerso = chatInterfacePerso;
-    //     this.chatInterface = null; // désactiver chatInterface
-    // }
+    public void setChatInterfacePerso(ChatInterfacePerso chatInterfacePerso){
+        this.chatInterfacePerso = chatInterfacePerso;
+        this.chatInterface = null; // désactiver chatInterface
+    }
    
     //Gestion de la réception des messages
     public void listenForMessages(){
