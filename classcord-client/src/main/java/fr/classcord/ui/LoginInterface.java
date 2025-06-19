@@ -35,8 +35,6 @@ public class LoginInterface extends JFrame{
     private ClientInvite clientInvite;
     private final JLabel loaderLabel;
    
-    
-
 
     //Constructor
     public LoginInterface(ClientInvite clientInvite){
@@ -86,10 +84,8 @@ public class LoginInterface extends JFrame{
             usernameField.setText(lastUser);
         }
 
-
         loginButton.addActionListener(e -> authenticateUser("login"));
         registerButton.addActionListener(e -> loginApresRegistration());
-
     }
 
     //authentification de user par LOGIN
@@ -141,7 +137,6 @@ public class LoginInterface extends JFrame{
             }
         }).start();
     }
-
 
     // Registration puis en cas de succes => login automatiquement
     private void loginApresRegistration(){
@@ -226,9 +221,6 @@ public class LoginInterface extends JFrame{
             return "";
         }
     }
-
-
-  
 
 
     //Deuxième et Troisième jour:17-18 juin 25 =>peut être mettre en commentaire??

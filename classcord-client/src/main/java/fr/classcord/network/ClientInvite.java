@@ -81,9 +81,13 @@ public class ClientInvite {
         this.chatInterfacePerso = null; //désactiver chatInterfacePerso
     }
 
-    public void setChatInterfacePerso(ChatInterfacePerso chatInterfacePerso){
-        this.chatInterfacePerso = chatInterfacePerso;
-        this.chatInterface = null; // désactiver chatInterface
+    // public void setChatInterfacePerso(ChatInterfacePerso chatInterfacePerso){
+    //     this.chatInterfacePerso = chatInterfacePerso;
+    //     this.chatInterface = null; // désactiver chatInterface
+    // }
+
+    public void setChatInterfacePerso(ChatInterfacePerso ui) {
+        this.chatInterfacePerso = ui;
     }
    
     //Gestion de la réception des messages
@@ -135,44 +139,6 @@ public class ClientInvite {
     }
 
 
-    // public boolean sendAuthRequest(String type, String username, String password){
-    //     if (writer == null || socket == null || socket.isClosed()) {
-    //         System.err.println("Erreur : Connexion au serveur requise.");
-    //         return false;
-    //     }
-
-    //     //création du requete en forme JSON
-    //     JSONObject request = new JSONObject();
-    //     request.put("type", type); //"login" ou "register"
-    //     request.put("username", username);
-    //     request.put("password", password);
-
-    //     //envoie la requête au serveur
-    //     writer.println(request.toString());
-    //     System.out.println("Requête envoyé: " + request.toString());
-
-    //     try {
-    //         //lire la réponse du serveur
-    //         String reponse = reader.readLine();
-    //         System.out.println("Réponse du serveur : " + reponse); // Debug
-
-    //         //vérification si le "status = OK"
-    //         JSONObject jsonReponse = new JSONObject(reponse);
-    //         boolean authReussi = jsonReponse.has("status") && jsonReponse.getString("status").equals("ok");
-
-    //         if(authReussi){
-    //             System.out.println("Authentification réussi, démarrage du chat...");
-               
-    //         }
-
-    //         return authReussi;
-    //         // return reponse != null && reponse.contains("success"); //ha van vàlasz => true ???
-    //     } catch (IOException e) {
-    //         System.out.println("Erreur pendant la récupération de réponse du serveur");
-    //         return false;
-    //     }
-    // };
-
     public void setPseudo(String pseudo){ 
         this.pseudo = pseudo;
     }
@@ -194,7 +160,6 @@ public class ClientInvite {
         return reader;
     }
 
-   
 
     //Premièr jour:16 juin 25 =>peut être mettre en commentaire
     //Méthode principale pour la console

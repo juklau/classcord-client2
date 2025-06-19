@@ -121,7 +121,7 @@ public class ChatInterface extends JFrame {
        try{
             port = Integer.parseInt(adressePort.getText().trim());
        }catch (NumberFormatException ex){
-            chatArea.append("⚠ Le port doit être un nombre entier valide.\n"); //??????????
+            chatArea.append("⚠ Le port doit être un nombre entier valide.\n"); 
             return;
        }
 

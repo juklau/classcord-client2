@@ -48,13 +48,13 @@ public class SelectionInterface extends JFrame {
         parentPanel.add(panel, BorderLayout.CENTER);
         add(parentPanel);
 
-        btnInvite.addActionListener(e -> ouvrirFenetrePseudoInvite());
+        btnInvite.addActionListener(e -> ouvrirFenetreInviteInterface());
         btnLogin.addActionListener(e -> ouvrirLoginInterface());
     }
 
-    private void ouvrirFenetrePseudoInvite() {
+    private void ouvrirFenetreInviteInterface() {
         dispose();
-        SwingUtilities.invokeLater(() -> new ChatInterface(clientInvite).setVisible(true));
+        SwingUtilities.invokeLater(() -> new InviteInterface(clientInvite).setVisible(true));
         //lehet hogy nem kell : SwingUtilities.invokeLater(() ->   ) ?????
     }
 

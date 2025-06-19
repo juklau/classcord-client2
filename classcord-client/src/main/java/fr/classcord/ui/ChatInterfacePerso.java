@@ -20,20 +20,21 @@ import fr.classcord.network.ClientInvite;
 
 public class ChatInterfacePerso extends JFrame {
 
-
+    //propriétés
     private final JPanel contentPane;
-    
     private final JTextArea chatArea;
     private final JTextField inputField;
     private final JButton sendButton;
     private final ClientInvite clientInvite;
-
-
+    
 
     //Constructeur
     public ChatInterfacePerso(ClientInvite clientInvite) {
         this.clientInvite = clientInvite;
         clientInvite.setChatInterfacePerso(this); //Associer ClientInvite à ChatInterfacePerso
+
+        // Lancer l'écoute des messages (une seule fois !)
+        clientInvite.listenForMessages();
 
         setTitle("Tchat de " + clientInvite.getPseudo());
         setSize(700, 500);
@@ -101,7 +102,6 @@ public class ChatInterfacePerso extends JFrame {
         String lastMessageJSON = clientInvite.getLastMessage();
         if(lastMessageJSON != null && !lastMessageJSON.isEmpty()){
           
-
             Message lastMessageString = Message.fromJson(lastMessageJSON); //convertion en message "normal"
             chatArea.append("Message reçu de" + lastMessageString.getFrom() + lastMessageString.getContent() + "\n");
             chatArea.repaint();
@@ -121,8 +121,6 @@ public class ChatInterfacePerso extends JFrame {
             ui.setVisible(true); 
         });
     }
-
-
 
     
 }

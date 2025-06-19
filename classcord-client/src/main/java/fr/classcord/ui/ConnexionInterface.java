@@ -21,7 +21,6 @@ import fr.classcord.network.ClientInvite;
 
 public class ConnexionInterface extends JFrame {
 
-    // private final JPanel contentPane;
     private final JTextField adresseIPServeur;
     private final JTextField adressePortServeur;
     private final JButton btnConnexionServeur;
@@ -43,7 +42,7 @@ public class ConnexionInterface extends JFrame {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
 
         panel.add(new JLabel("Adresse IP: "));
-        adresseIPServeur = new JTextField("10.0.108.78");
+        adresseIPServeur = new JTextField("10.0.108.52");
         panel.add(adresseIPServeur);
 
         panel.add(new JLabel("Adresse Port: "));
@@ -56,8 +55,6 @@ public class ConnexionInterface extends JFrame {
         
         parentPanel.add(panel, BorderLayout.CENTER);
         add(parentPanel);
-
-    
 
         btnConnexionServeur.addActionListener(new ActionListener() {
             @Override
@@ -111,7 +108,6 @@ public class ConnexionInterface extends JFrame {
     }
 
 
-    // 10.0.108.78
 }
 
 
