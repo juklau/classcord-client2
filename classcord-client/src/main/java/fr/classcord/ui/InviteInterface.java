@@ -11,6 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import org.json.JSONObject;
+
 import fr.classcord.network.ClientInvite;
 
 
@@ -68,6 +70,9 @@ public class InviteInterface extends JFrame {
         // Créer un client et lui attribuer le pseudo
         // clientInvite = new ClientInvite(pseudo);
         clientInvite.setPseudo(pseudo);
+
+    
+
         clientInvite.listenForMessages();
 
         // Connexion au serveur
@@ -79,6 +84,12 @@ public class InviteInterface extends JFrame {
                 JOptionPane.showMessageDialog(this, "Bienvenue " + pseudo + " !");
                 new ChatInterfacePerso(clientInvite).setVisible(true);
                 dispose(); // Fermer la fenêtre d'invité
+
+                //pour mettre à jour en envoyant le pseudo au serveur????????????
+                JSONObject json = new JSONObject();
+                json.put("type", "change_username"); //dans la classe ClientInvite
+                json.put("new_user", pseudo);
+                clientInvite.send(json.toString());
             });
         }).start();
 
@@ -88,9 +99,9 @@ public class InviteInterface extends JFrame {
     //Troisième et Quatrième jour: 18-19 juin 25 
     //Méthode principale pour la connexionInterface
     public static void main(String[] args) {
-    SwingUtilities.invokeLater(() -> {
-        ClientInvite tempClient = new ClientInvite("invité");
-        new InviteInterface(tempClient).setVisible(true);
-    });
-}
+        SwingUtilities.invokeLater(() -> {
+            ClientInvite tempClient = new ClientInvite("invité");
+            new InviteInterface(tempClient).setVisible(true);
+        });
+    }
 }

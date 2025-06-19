@@ -10,9 +10,10 @@ import fr.classcord.network.ClientInvite;
 
 
 public class User {
+
+    //propriétés
     private String username;
     private String status;
-
 
 
     // Constructeurs
@@ -41,6 +42,7 @@ public class User {
 
 
     //methodes
+    //sauvegarder le username du dernière user
     public static void saveLastUsername(String username){
         Properties properties = new Properties();
         properties.setProperty("lastUsername", username);
@@ -52,23 +54,7 @@ public class User {
         }
     }
 
-
-    // public static String loadLastUsername(){
-    //     Properties properties = new Properties();
-        
-    //     try(FileInputStream fileInputStream = new FileInputStream("config.properties")){
-    //         properties.load(fileInputStream);
-
-    //         //retourner "lastUsername"; si aucun pseudo n'est enregistré => renvoie ""
-    //         return properties.getProperty("lastUsername", ""); 
-    //     }catch(IOException e){
-    //         // System.out.println("Aucun pseudo enregistré");
-    //         return "";
-    //     }
-
-    // }
-
-    // Méthode pour s'inscrire
+    // s'inscrire
 	public static String register(ClientInvite client, String username, String password) throws Exception {
 		if (client == null || client.getIn() == null) {
             System.err.println("Erreur : le client n'est pas connecté au serveur.");
@@ -94,14 +80,13 @@ public class User {
 		return response;
 	}
 
-	// Méthode pour se connecter
+	// se connecter par login
 	public static String login(ClientInvite client, String username, String password) throws Exception {
 		if (client == null || client.getIn() == null) {
             System.err.println("Erreur : Connexion au serveur requise.");
             throw new IllegalStateException("Le client n'est pas connecté au serveur.");
         }
-        
-        
+         
         JSONObject request = new JSONObject();
 		request.put("type", "login");
 		request.put("username", username);
@@ -129,6 +114,5 @@ public class User {
             "username = '" + username + '\'' +
             ",status = '" + status + '\'' +
         '}';
-    }
-    
+    }  
 }

@@ -2,8 +2,10 @@ package fr.classcord.model;
 
 public class CurrentUser {
 
-     private static String username;
+    //propriétés
+    private static String username;
 
+    //setters/ getters
     public static void setUsername(String name) {
         username = name;
     }

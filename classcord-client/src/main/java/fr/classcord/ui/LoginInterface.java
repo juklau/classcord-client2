@@ -113,8 +113,23 @@ public class LoginInterface extends JFrame{
                 String response = User.login(clientInvite, username, password);
                 JSONObject resp = new JSONObject(response);
                 if(resp.optString("status").equals("ok")){
-                    saveLastUsername(username);// megnezni mi van benne nalam loadLastName??
-                    SwingUtilities.invokeLater(() -> {
+                    saveLastUsername(username);
+
+                    clientInvite.setPseudo(username);
+                    clientInvite.notifyOnlineStatus(); //je dis au serveur que je suis "online"
+
+                    // Ajoute l'utilisateur local à la liste onlineUsers
+                    // onlineUsers.add(username);
+                    // refreshUserList();
+
+                    // préparation de la requête pour récupérer la lise des utilisateus en ligne
+                    JSONObject requestUserList = new JSONObject();
+                    requestUserList.put("type", "users"); 
+
+                    //envoie la requête au serveur
+                    clientInvite.send(requestUserList.toString()); 
+
+                    SwingUtilities.invokeLater(() -> { //exécuter du code sur le thread de l’interface graphique 
                         JOptionPane.showMessageDialog(this, "Bienvenue " + username);
                         openChatWindow();
                         dispose();
@@ -168,6 +183,21 @@ public class LoginInterface extends JFrame{
                     JSONObject loginResp = new JSONObject(loginResponse);
                     if(loginResp.optString("status").equals("ok")){
                         saveLastUsername(username);
+
+                        clientInvite.setPseudo(username);
+                        clientInvite.notifyOnlineStatus(); //je dis au serveur que je suis "online"
+
+                        // Ajoute l'utilisateur local à la liste onlineUsers
+                        // onlineUsers.add(username);
+                        // refreshUserList();
+
+                        // préparation de la requête pour récupérer la lise des utilisateus en ligne
+                        JSONObject requestUserList = new JSONObject();
+                        requestUserList.put("type", "connected_users"); 
+
+                        //envoie la requête au serveur
+                        clientInvite.send(requestUserList.toString()); 
+                        
                         SwingUtilities.invokeLater(() -> {
                             JOptionPane.showMessageDialog(this, "Bienvenue " + username);
                             openChatWindow();
@@ -203,7 +233,7 @@ public class LoginInterface extends JFrame{
 
 
     private void openChatWindow() {
-         new ChatInterfacePerso(clientInvite).setVisible(true);
+        new ChatInterfacePerso(clientInvite).setVisible(true);
     }
 
     //Mémoriser

@@ -71,6 +71,7 @@ public class ConnexionInterface extends JFrame {
         int port;
 
         try {
+            //transtypage de String en int
             port = Integer.parseInt(adressePortServeur.getText().trim());
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Le port doit être un nombre valide !");
@@ -97,7 +98,6 @@ public class ConnexionInterface extends JFrame {
             JOptionPane.showMessageDialog(this, "Veuillez entrer une adresse IP valide !");
         }
     }
-
 
     //Deuxième et Troisième jour:17-18 juin 25 
     //Méthode principale pour la connexionInterface

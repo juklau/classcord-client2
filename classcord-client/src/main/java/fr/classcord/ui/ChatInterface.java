@@ -8,16 +8,21 @@ import java.awt.event.ActionEvent; //gestion de la mise en page
 import java.awt.event.ActionListener; //gestion des actions utilisateur
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Map;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame; //gestion des actions utilisateur
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+
+import org.json.JSONObject;
 
 import fr.classcord.model.Message;
 import fr.classcord.network.ClientInvite;
@@ -33,6 +38,10 @@ public class ChatInterface extends JFrame {
     private final JTextField inputField;
     private final JButton sendButton;
     private ClientInvite clientInvite;
+
+    //pour afficher les pax connectés
+    private final DefaultListModel<String> userListModel = new DefaultListModel<>();
+    private final JList<String> userList = new JList<>(userListModel);
 
     //Constructeur
     public ChatInterface(ClientInvite clientInvite) {
@@ -147,11 +156,38 @@ public class ChatInterface extends JFrame {
     private void sendMessage() {
         if(clientInvite != null){
             String messageText = inputField.getText().trim(); //on "lit" le texte du champ
-            if (!messageText.isEmpty()) {
-                clientInvite.sendMessage(messageText);
-                chatArea.append("Moi: " + messageText + "\n"); //afficher le message
-                inputField.setText(""); //vider le champ
+            //  AVANT la séparation => individuel ou global
+            // if (!messageText.isEmpty()) {
+            //     clientInvite.sendMessage(messageText);
+            //     chatArea.append("Vous: " + messageText + "\n"); //afficher le message
+            //     inputField.setText(""); //vider le champ  
+            // }
+
+            if(messageText.isEmpty()){
+                return;
             }
+
+            //sélectionner utilisateur
+            String selectedUser= userList.getSelectedValue();
+
+            JSONObject json = new JSONObject();
+            json.put("type", "message");
+            json.put("content", messageText);
+
+            if(selectedUser != null && !selectedUser.isEmpty()){
+                //Envoyer un message privé
+                json.put("subtype", "private");
+                json.put("to", selectedUser);
+
+                //affichage message privé avec préfixe
+                chatArea.append("**[MP à " + selectedUser + "]** " + messageText + "\n");
+            }else{
+                //envoyer un message global
+                json.put("subtype", "global");
+                chatArea.append("Vous: " + messageText + "\n"); //afficher le message
+            }
+            clientInvite.send(json.toString());
+            inputField.setText("");
         }else{
             chatArea.append("Erreur : Vous devez être connecté avant d'envoyer un message.\n");
         }        
@@ -165,25 +201,52 @@ public class ChatInterface extends JFrame {
         }
     }
 
-    // public void afficheMessage(){ => c'est afficher en forme JSON   
-    //     if(clientInvite.getLastMessage() != null){
-    //         // Afficher le dernier message reçu
-    //         chatArea.append("Message reçu: " + clientInvite.getLastMessage() + "\n");
+    //pour mettre à jour dynamiquement les personnes connectés
+    public void updateUserList(Map<String, String> userMap){
+        SwingUtilities.invokeLater(() -> {
+            userListModel.clear();
+            System.out.println("🧾 Mise à jour de la liste d'utilisateurs connectés :");
+
+            for (Map.Entry<String, String> entry: userMap.entrySet()){ //ex: dodo, online
+                String pseudo = entry.getKey();
+                String statut = entry.getValue();
+
+                if("online".equalsIgnoreCase(statut)) {
+                    userListModel.addElement(pseudo);
+                    System.out.println("Résultat: " + pseudo + " est en ligne."); //ça fonctionne 
+                }
+            }
+        });
+    }
+
+   
+
+    // Afficher le dernier message reçu
+    // public void afficheMessage(){ // régi ha az alatta lévö jo akkor ezt torolni!!!!!!!
+    //     String lastMessageJSON = clientInvite.getLastMessage();
+    //     if(lastMessageJSON != null && !lastMessageJSON.isEmpty()){
+    //         Message lastMessageString = Message.fromJson(lastMessageJSON); //convertion en message "normal"
+    //         chatArea.append("Message reçu de " + lastMessageString.getFrom() + " : "+ lastMessageString.getContent() + "\n");
+    //         chatArea.setCaretPosition(chatArea.getDocument().getLength());
     //         chatArea.repaint();
     //         chatArea.revalidate();
     //     }
     // }
 
 
-    // Afficher le dernier message reçu
-    public void afficheMessage(){
+    public void afficheMessage(){ 
         String lastMessageJSON = clientInvite.getLastMessage();
         if(lastMessageJSON != null && !lastMessageJSON.isEmpty()){
-            Message lastMessageString = Message.fromJson(lastMessageJSON); //convertion en message "normal"
-            chatArea.append("Message reçu de" + lastMessageString.getFrom() + " : "+ lastMessageString.getContent() + "\n");
-            chatArea.setCaretPosition(chatArea.getDocument().getLength());
-            chatArea.repaint();
-            chatArea.revalidate();
+
+            try{
+                 Message lastMessageString = Message.fromJson(lastMessageJSON); //convertion en message "normal"
+                chatArea.append("Message reçu de " + lastMessageString.getFrom() + " : "+ lastMessageString.getContent() + "\n");
+                chatArea.setCaretPosition(chatArea.getDocument().getLength());
+                chatArea.repaint();
+                chatArea.revalidate();
+            }catch (Exception e){
+                System.err.println("Erreur lors de l'affichage du message : " + e.getMessage());
+            }
         }
     }
     

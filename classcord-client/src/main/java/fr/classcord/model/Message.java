@@ -3,6 +3,8 @@ package fr.classcord.model;
 import org.json.JSONObject;
 
 public class Message{
+
+    //propriétés
     public String type;
     public String subtype;
     public String from;
@@ -12,7 +14,7 @@ public class Message{
 
 
 
-     // Constructeurs
+    // Constructeurs
 
     //constructeur vide => il faut utiliser les setter
     // public Message(){
@@ -34,7 +36,6 @@ public class Message{
         this.from = from;
         this.content = content;
     }
-
 
 
     // getters/setters
@@ -89,7 +90,6 @@ public class Message{
     }
 
    
-
     //methodes
    
     //toujours faire toString
@@ -124,15 +124,13 @@ public class Message{
         json.put("to", to);
         json.put("content", content);
         json.put("timestamp", timestamp);
-
         return json;
     }
 
     //Convertir une chaîne JSON en objet Message
     public static Message fromJson(String jsonString){
         JSONObject json = new JSONObject(jsonString);
-        return new Message(
-            
+        return new Message(       
             json.getString("type"),
             json.optString("subtype", "global"), //gestion de l'absence de subtype
             json.getString("from"),

@@ -1,13 +1,18 @@
 package fr.classcord.network;
 
 import java.io.BufferedReader; //pour recevoir les messages
-import java.io.IOException;
+import java.io.IOException; //pour envoyer les messages
 import java.io.InputStreamReader;
-import java.io.PrintWriter; //pour envoyer les messages
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import fr.classcord.model.Message;
 import fr.classcord.ui.ChatInterface;
@@ -28,7 +33,9 @@ public class ClientInvite {
     private String lastMessage = "";
     private ChatInterface chatInterface;
     private ChatInterfacePerso chatInterfacePerso;
-    // private MessageListener messageListener;
+    
+    //suivre les utilisateurs et leur état en les stockant
+    private final Map<String, String> userStatusMap = new HashMap<>(); //ex.: dodo online
 
     
     
@@ -98,17 +105,72 @@ public class ClientInvite {
                 //!socket.isClosed() => la connexion est encore active
                 //line = reader.readLine()) != null =>il y a texte envoyée par le serveur
                 while(!socket.isClosed() && socket !=null){
-                    if((line = reader.readLine()) != null){
-                        lastMessage = line;
+                    line = reader.readLine(); //modositva
+                    if( line != null){ //modositva
+                        lastMessage = line.trim(); //modositva
                         System.out.println("Message reçu " + line);
 
-                        SwingUtilities.invokeLater(() -> {
-                            if (chatInterfacePerso != null && chatInterfacePerso.isVisible()) {
-                                chatInterfacePerso.afficheMessage();
-                            } else if (chatInterface != null && chatInterface.isVisible()) {
-                                chatInterface.afficheMessage();
+                        JSONObject json = new JSONObject(line);
+                        System.out.println("JSON reçu = " + json.toString(2));
+
+                        String type = json.optString("type");
+
+                        switch (type) {
+                            case "message" -> SwingUtilities.invokeLater(() -> {
+                                    if (chatInterfacePerso != null && chatInterfacePerso.isVisible()) {
+                                        chatInterfacePerso.afficheMessage();
+                                    } else if (chatInterface != null && chatInterface.isVisible()) {
+                                        chatInterface.afficheMessage();
+                                    }
+                                });
+                            
+                            case "status" -> {
+                                String username = json.optString("user");
+                                String statut = json.optString("state");
+
+                                userStatusMap.put(username, statut);
+
+                                if (chatInterfacePerso !=  null){
+                                    chatInterfacePerso.updateUserList(new HashMap<>(userStatusMap));
+                                }else if (chatInterface != null){
+                                    chatInterface.updateUserList(new HashMap<>(userStatusMap));
+                                }
                             }
-                        });
+
+                            case "users" -> {
+                                System.out.println("Liste complète reçu");
+                                JSONArray usersArray = json.optJSONArray("users");
+
+                                if(usersArray != null){
+                                    // Vider temporairement la map des utilisateurs (optionnel, selon ton besoin)
+                                    userStatusMap.clear();
+
+                                    for(int i = 0; i < usersArray.length(); i++){ //parcourt toutes les clés (pseudos) dans l'objet users
+                                        String pseudo = usersArray.optString(i);
+
+                                        // Ajouter chaque utilisateur avec statut "online" (puisque ce sont ceux connectés)
+                                        userStatusMap.put(pseudo, "online");
+                                    }
+
+                                    if (chatInterfacePerso !=  null){
+                                        chatInterfacePerso.updateUserList(new HashMap<>(userStatusMap)); //création des copies pour éviter les conflits
+                                    }else if (chatInterface != null){
+                                        chatInterface.updateUserList(new HashMap<>(userStatusMap));
+                                    }
+                                }else{
+                                    System.err.println("Réponse 'users' invalide: pas de champ de 'users'");
+                                }
+                            }
+                             case "change_username" -> { ///modifier lehet hogy le kell venni
+                                 String newPseudo = json.getString("new_user");
+                                 System.out.println("Pseudo mis à jour : " + newPseudo);
+                                 this.setPseudo(newPseudo);
+                            }
+
+                            
+
+                            default -> System.out.println("Type de message inconnu : " + type);
+                        }
                     }else{
                         break; //si le serveur ferme la connexion
                     }
@@ -133,11 +195,30 @@ public class ClientInvite {
             Message message = new Message("message", "global", pseudo, "global", messageText, "");
             writer.println(message.toJson().toString());
         }else{
-            System.err.println("Impossible d'envoyer le message : connexion fermée.\n");
+            System.err.println("Impossible d'envoyer le message, la connexion est fermée.\n");
         }
-       
     }
 
+    public void notifyOnlineStatus() {
+        if (writer != null && pseudo != null && !pseudo.isEmpty()) {
+            JSONObject json = new JSONObject();
+            json.put("type", "status");
+            json.put("user", pseudo);
+            json.put("state", "online");
+            writer.println(json.toString());
+        }
+    }
+
+    //envoie la requête de type "users"
+    public void requestUserList() {
+        if (writer != null && socket != null && !socket.isClosed()) {
+            JSONObject request = new JSONObject();
+            request.put("type", "users");
+            send(request.toString());
+        } else {
+            System.err.println("Impossible de demander la liste des utilisateurs, connexion non active.");
+        }
+    }
 
     public void setPseudo(String pseudo){ 
         this.pseudo = pseudo;
