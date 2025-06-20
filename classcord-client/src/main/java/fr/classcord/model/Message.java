@@ -13,7 +13,6 @@ public class Message{
     public String timestamp;
 
 
-
     // Constructeurs
 
     //constructeur vide => il faut utiliser les setter

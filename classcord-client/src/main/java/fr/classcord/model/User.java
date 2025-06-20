@@ -40,8 +40,8 @@ public class User {
         this.status = status;
     }
 
-
     //methodes
+
     //sauvegarder le username du dernière user
     public static void saveLastUsername(String username){
         Properties properties = new Properties();

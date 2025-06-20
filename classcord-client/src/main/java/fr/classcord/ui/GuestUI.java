@@ -11,13 +11,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import org.json.JSONObject;
-
 import fr.classcord.network.ClientInvite;
 
 
 
-public class InviteInterface extends JFrame {
+public class GuestUI extends JFrame {
 
    //propriétés
     private final JTextField pseudoUsername;
@@ -26,12 +24,12 @@ public class InviteInterface extends JFrame {
     
 
     //Contstucteur
-    public InviteInterface(ClientInvite clientInvite) {
+    public GuestUI(ClientInvite clientInvite) {
         this.clientInvite = clientInvite;
         // initComponents();
         
 
-        setTitle("Connexion au Serveur");
+        setTitle("Connexion au Chat");
         setSize(400, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //fermeture automatique
         setLocationRelativeTo(null); // Centrer la fenêtre
@@ -56,9 +54,10 @@ public class InviteInterface extends JFrame {
         btnConnexionChat.addActionListener(e -> btnConnexionChatClic());
 
         setVisible(true);
-
     }
 
+
+    //méthodes
 
     private void btnConnexionChatClic() {
         String pseudo = pseudoUsername.getText().trim();
@@ -70,8 +69,6 @@ public class InviteInterface extends JFrame {
         // Créer un client et lui attribuer le pseudo
         // clientInvite = new ClientInvite(pseudo);
         clientInvite.setPseudo(pseudo);
-
-    
 
         clientInvite.listenForMessages();
 
@@ -85,11 +82,6 @@ public class InviteInterface extends JFrame {
                 new ChatInterfacePerso(clientInvite).setVisible(true);
                 dispose(); // Fermer la fenêtre d'invité
 
-                //pour mettre à jour en envoyant le pseudo au serveur????????????
-                JSONObject json = new JSONObject();
-                json.put("type", "change_username"); //dans la classe ClientInvite
-                json.put("new_user", pseudo);
-                clientInvite.send(json.toString());
             });
         }).start();
 
@@ -97,11 +89,11 @@ public class InviteInterface extends JFrame {
 
 
     //Troisième et Quatrième jour: 18-19 juin 25 
-    //Méthode principale pour la connexionInterface
+    //Méthode principale pour la GuestUI
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             ClientInvite tempClient = new ClientInvite("invité");
-            new InviteInterface(tempClient).setVisible(true);
+            new GuestUI(tempClient).setVisible(true);
         });
     }
 }

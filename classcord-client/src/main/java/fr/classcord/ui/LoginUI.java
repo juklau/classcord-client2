@@ -24,7 +24,7 @@ import org.json.JSONObject;
 import fr.classcord.model.User;
 import fr.classcord.network.ClientInvite;
 
-public class LoginInterface extends JFrame{
+public class LoginUI extends JFrame{
 
     //propriétés
     private final JTextField usernameField;
@@ -37,7 +37,7 @@ public class LoginInterface extends JFrame{
    
 
     //Constructor
-    public LoginInterface(ClientInvite clientInvite){
+    public LoginUI(ClientInvite clientInvite){
         this.clientInvite=clientInvite;
 
         setTitle("Connexion au Chat");
@@ -87,6 +87,8 @@ public class LoginInterface extends JFrame{
         loginButton.addActionListener(e -> authenticateUser("login"));
         registerButton.addActionListener(e -> loginApresRegistration());
     }
+
+    //méthodes
 
     //authentification de user par LOGIN
     private void authenticateUser(String type){
@@ -231,7 +233,6 @@ public class LoginInterface extends JFrame{
         }).start();
     }
 
-
     private void openChatWindow() {
         new ChatInterfacePerso(clientInvite).setVisible(true);
     }
@@ -254,12 +255,11 @@ public class LoginInterface extends JFrame{
 
 
     //Deuxième et Troisième jour:17-18 juin 25 =>peut être mettre en commentaire??
-    //Méthode principale pour la LoginInterface
+    //Méthode principale pour la LoginUI
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() ->{
             ClientInvite clientInvite = new ClientInvite("null");
-            new LoginInterface(clientInvite).setVisible(true);
+            new LoginUI(clientInvite).setVisible(true);
         });
     }
-    
 }

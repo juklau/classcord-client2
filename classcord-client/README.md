@@ -5,6 +5,14 @@
 
 # ClassCord Client 
 
+### Lancement du Chat
+
+1. Lancer l’application via la classe `ConnectToServeur`.
+2. Se connecter au serveur (IP/port).
+3. S’authentifier (inscription + connexion automatique, ou connexion directe, ou mode invité).
+4. Accéder à la fenêtre de chat.
+
+
 # 📖 Jour 1 - Mise en place du projet et modélisation
 
 Pendant cette journée, on configure les IDEs afin de pouvoir travailler en bon condition, on organise le package et on commence découvrir l'utilisation de VSCode en Java
@@ -297,7 +305,7 @@ Cette méthode de la classe ClientInvite peut être appelée par le bouton d'"En
 
 **Interface graphique Swing de base**
 
-## Cette interface se trouve dans le dossier image sous le nom `ChatInterface`
+## L'image de cette interface se trouve dans le dossier image sous le nom `ChatInterface`
 
 Résumé de la deuxième journée:
 - Classe ClientInvite fonctionnelle capable de communiquer avec un serveur. 
@@ -319,17 +327,18 @@ Résumé de la deuxième journée:
 ##  Architecture du projet
 - `fr.classcord.network` → Contient la classe `ClientInvite`.
 - `fr.classcord.model` → Ajoute de la classe `CurrentUser`
-- `fr.classcord.ui` → Ajoute des classes: `ConnexionInterface`, `SelectionneInterface`, `LoginInterface`, `ChatInterfacePerso`, `InviteInterface`
+- `fr.classcord.ui` → Ajoute des classes: `ConnectToServeur`, `SelectionneInterface`, `LoginUI`, `ChatInterfacePerso`, `GuestUI`
 
 ###  Étapes de développement:
 
 ## Fonctionnalités Implémentées
 
 **Connexion au serveur**
+
 L'utilisateur peut connecter au Serveur en saissant l'adresse IP et le port du serveur.
 Une fois connecté, il accéde à l'interface d'authentification.
 
-Pour cette connexion j'ai créé la méthode suivant dans la classe ConnexionInterface:
+Pour cette connexion j'ai créé la méthode suivant dans la classe ConnectToServeur:
     ```
     private void connectToServer(){
             String ip = adresseIPServeur.getText().trim();
@@ -346,10 +355,10 @@ Pour cette connexion j'ai créé la méthode suivant dans la classe ConnexionInt
                 boolean connected = clientInvite.connect(ip, port);
                 if (connected) {
                     JOptionPane.showMessageDialog(this, "Connexion réussie au serveur " + ip + " : " + port);
-                    dispose(); // Fermer ConnexionInterface
+                    dispose(); // Fermer ConnectToServeur
 
                     if (clientInvite != null) {
-                            SwingUtilities.invokeLater(() -> new SelectionInterface(clientInvite).setVisible(true));
+                            SwingUtilities.invokeLater(() -> new ChoixModeUI(clientInvite).setVisible(true));
                         } else {
                             System.err.println("Erreur : clientInvite est null !");
                         }
@@ -362,16 +371,17 @@ Pour cette connexion j'ai créé la méthode suivant dans la classe ConnexionInt
         }
     ```
 
-## L'interface de connexion au Serveur se trouve dans le dossier image sous le nom `ConnexionInterface`
+## L'image de l'interface de connexion au Serveur se trouve dans le dossier image sous le nom `ConnectToServeur`
 
 **Interface qui permet choisir le mode de la connexion**
 Pendant cet étape user peut choisir s'il voudrait se connecter comme "Invité" ou comme "Utilisateur".
 En appuyant sur un des boutons, il est amené sur l'interface correspondant de son choix
 
-## L'interface de connexion au Serveur se trouve dans le dossier image sous le nom `SelectionInterface`
+## L'image de l'interface de connexion au Serveur se trouve dans le dossier image sous le nom `ChoixModeUI`
 
 
 **Interface de Connexion (Swing) en tant que l'Utilisateur'**
+
 - Fenêtre avec :
   - Champ `username`
   - Champ `password` (masqué via `JPasswordField`)
@@ -379,25 +389,28 @@ En appuyant sur un des boutons, il est amené sur l'interface correspondant de s
 
 Il y a 2 possibilités:
 1. Le nouveau utilisateur s'enregistre via le bouton "S'inscrire" et puis il accéde automatiquement au Tchat via
-    la méthode **loginApresRegistration()** de la classe `LoginInterface`.
+    la méthode **loginApresRegistration()** de la classe `LoginUI`.
     Cette méthode crée un Thread dans lequel elle fait appel de la méthode **register()** et **login()** de la classe `User`.
     Pendant cette méthode j'utilise **SwingUtilities.invokeLater()** qui permet exécuter du code sur le thread de l’interface graphique.
 
 
 2.L'utilisateur déjà enregistré dans la base de donnée du serveur, il se connect en entrant son nom d'utilisateur et son mot de passe via la méthode **authenticateUser()** qui crée également un Thread dans lequel il fait appel de la méthode **login()** de la classe `User` et pendant cette méthode j'utilise aussi **SwingUtilities.invokeLater()**.
 
-## L'interface de connexion au Serveur se trouve dans le dossier image sous le nom `LoginInterface`
+## L'image de l'interface de connexion au Serveur se trouve dans le dossier image sous le nom `LoginUI`
 
 
 **Interface de Connexion (Swing) en tant que l'Invité'**
 Il saisit son nom de pseudo, et en appuyant sur le bouton "Connexion au Chat", il peut accéder au Tchat sans compte, en "Mode invité"
 J'ai créé la méthode **btnConnexionChatClic()**, qui permet réaliser cette tâche.
 
-## L'interface de connexion au Serveur se trouve dans le dossier image sous le nom `InviteInterface`
+## L'image de l'interface de connexion au Serveur se trouve dans le dossier image sous le nom `GuestUI`
 
 
 
 **Communication avec le Serveur (Socket + JSON)**
+
+## L'image de l'interface de Chat se trouve dans le dossier image sous le nom `ChatIterfacePerso`
+
 Lors de l’inscription, les informations sont envoyées au serveur sous forme de message JSON :
 
     ```json
@@ -436,7 +449,7 @@ En cas d'échec de connexion
 **Gestion de l’Utilisateur**
 
 Pour conserver et mémoriser le dernier pseudo j'utilise la méthode **saveLastUsername(String username)**.
-Affiche en **Auto-complétion** du champ `username` avec le dernier pseudo sur `LoginInterface`:
+Affiche en **Auto-complétion** du champ `username` avec le dernier pseudo sur `LoginUI`:
 
     ```
     String lastUser = readLastUsername();
@@ -498,7 +511,7 @@ Pendant cette journée afin de comprendre comment les utilisateurs sont identifi
 ##  Architecture du projet
 - `fr.classcord.network` → Contient la classe `ClientInvite`.
 - `fr.classcord.model` → Contient la classe `CurrentUser`, `Message`, `User`
-- `fr.classcord.ui` → Contient les classes: `ConnexionInterface`, `SelectionneInterface`, `LoginInterface`, `ChatInterfacePerso`, `InviteInterface`, `ChatInterface`
+- `fr.classcord.ui` → Contient les classes: `ConnectToServeur`, `SelectionneInterface`, `LoginUI`, `ChatInterfacePerso`, `GuestUI`, `ChatInterface`
 
 ###  Étapes de développement:
 
@@ -593,7 +606,9 @@ Afin de mettre à jour dynamiquement la liste affichée j'utilise la méthode **
 
 Quand l'utilisateur est sélectionné, on peut envoyer en message privé invisible par les autres utilisateurs.
 J'ai modifié la méthode **sendMessage()** de la classe `ChatInterfacePerso` en différenciant le "subtype":
+J'ai ajouté un attribut to : le destinataire si MP, ou "global" sinon.
     ```
+        //sélectionner utilisateur
         String selectedUser= userList.getSelectedValue();
 
         JSONObject json = new JSONObject();
@@ -610,6 +625,8 @@ J'ai modifié la méthode **sendMessage()** de la classe `ChatInterfacePerso` en
         }else{
             //envoyer un message global
             json.put("subtype", "global");
+            json.put("to", "global");
+            
             chatArea.append("Vous: " + messageText + "\n"); //afficher le message
         }
         clientInvite.send(json.toString());
@@ -630,6 +647,7 @@ J'ai adapté le message JSON à envoyer:
 
 Il a fallu différencier l'affichage des messages selon leur types!!
 J'ai modifié la méthode **afficheMessage()** dans la classe `ChatInterfacePerso`
+Dans l'affichage, j'ai utilisé "subtype" pour distinguer les types de messages.
 
     ```
         try {
@@ -646,10 +664,11 @@ J'ai modifié la méthode **afficheMessage()** dans la classe `ChatInterfacePers
 
             if("private".equals(subtype)){
 
-                //affichage message privé avec préfixe
-                chatArea.append("**[MP à " + from + "]** " + content + "\n"); //modositani kell!!!!!!
+                //affichage de message "privé" avec préfixe
+                chatArea.append("**[MP de " + from + "]** " + content + "\n");
             }else{
-                chatArea.append("Message reçu de " + from + " : " + content + "\n");
+                //affichage de message "global"
+                chatArea.append(from + " : " + content + "\n");
             }
             // placer le curseur de texte (caret) à la fin du contenu du chatArea afin de voir le dernier message
             chatArea.setCaretPosition(chatArea.getDocument().getLength());
@@ -657,7 +676,7 @@ J'ai modifié la méthode **afficheMessage()** dans la classe `ChatInterfacePers
         } catch (Exception e) {
             System.out.println("Erreur dans afficheMessage() " + e.getMessage());
         }
-    ```
+```
 
 **Mettre à jour le modèle objet**
 
@@ -673,19 +692,84 @@ Dans la classe `Message`, j'ai ajouté un attribut subtype:
             this.timestamp = timestamp;
         }
     ```
+**Différencier l'envoie du message "privé" et "global"**
 
-Ajouter un attribut to : le destinataire si MP, ou "global" sinon   C4EST ENCORE A FAIRE!!!!
+Pour donner la possibilité d'envoyer un MP ou message global j'ai ajouté un bouton "Global" qui permet accomplir cette tâche 
 
-Dans l'affichage, utiliser subtype pour distinguer les types de messages. A FAIRE!!!!!
+    ```
+        globalButton.addActionListener(e -> userList.clearSelection());
 
-
+        userList.addListSelectionListener(e -> {
+            String selected = userList.getSelectedValue();
+            if (selected != null) {
+                globalButton.setText("↩ Global");
+            } else {
+                globalButton.setText("Global");
+            }
+        });
+    ```
 
 **BONUS**
-**Ajout d'une couleur ou icône personnalisée pour chaque utilisateur connecté**
+
+**Ajout d'une couleur personnalisée pour chaque utilisateur connecté**
+
+J'ai crée dans la classe `ChatInterfacePerso` 2 méthodes:
+
+la méthode **getColorForUser(String user)**
+    ```
+        //définir la couleur de chaque utilisateur
+        public Color getColorForUser(String user){
+            if (userColors.containsKey(user)) {
+                return userColors.get(user);
+            }
+
+            int hash = Math.abs(user.hashCode()); //garantit que chaque pseudo aura une base différente
+            // >> => décale les bits vers la droit
+            // & 0xFF => pour garder que 8 bits (entre 0 et 255)
+            //                                  => r bits 16 à 23
+            //                                  => g bits 8 à 15
+            //                                  => b bits 0 à 7
+            int r = (hash >> 16) & 0xFF; 
+            int g = (hash >> 8) & 0xFF;
+            int b = hash & 0xFF;
+
+            // afin d'empêcher d’avoir du noir ou du blanc
+            r = (r + 100) % 256;
+            g = (g + 100) % 256;
+            b = (b + 100) % 256;
+
+            Color color = new Color(r, g, b);
+            userColors.put(user, color);
+            return color;
+        }
+    ```
 
 
+la méthode **appendFormattedMessage(String from, String content, boolean isPrivate)**
+    ```
+    //afin d'afficher l'écriture des utilisatuers en couleur
+    public void appendFormattedMessage(String from, String content, boolean isPrivate){
+        try {
+            //Message coloré pour l'utilisateur
+            Style fullStyle = chatArea.addStyle("full_" + from, null);
+            StyleConstants.setForeground(fullStyle, getColorForUser(from));
+            StyleConstants.setBold(fullStyle, true); 
 
+            String textToInsert;
+            if(isPrivate){
+                textToInsert = "**[MP de " + from + "]** " + content + "\n";
+            }else{
+                textToInsert = from + " : " + content + "\n";
+            }
 
+            doc.insertString(doc.getLength(), textToInsert, fullStyle);
+            chatArea.setCaretPosition(doc.getLength());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    ```
 
 Résumé de la quatrième journée:
 - Inclusion dans l'interface Swing une liste déroulante des utilisateurs connectés.
@@ -710,16 +794,66 @@ La dernière journée, il a fallu gérer les statuts des utilisateurs, améliore
 ##  Architecture du projet
 - `fr.classcord.network` → Contient la classe `ClientInvite`.
 - `fr.classcord.model` → Contient la classe `CurrentUser`, `Message`, `User`
-- `fr.classcord.ui` → Contient les classes: `ConnexionInterface`, `SelectionneInterface`, `LoginInterface`, `ChatInterfacePerso`, `InviteInterface`, `ChatInterface`
+- `fr.classcord.ui` → Contient les classes: `ConnectToServeur`, `SelectionneInterface`, `LoginUI`, `ChatInterfacePerso`, `GuestUI`, `ChatInterface`
 
-###  Étapes de développement                    KIPOTOLNI
+###  Étapes de développement                    
 
 ## Fonctionnalités Implémentées
 
+J'ai travaillé dans la classe `ChatInterfacePerso` pendant cette journée
+
 **Ajout de la gestion des statuts utilisateur**
+
+J'ai ajouteé un menu déroulant (JComboBox) pour choisir le statut par utilisateur:
+
+j'ai déclaré ces proptiétés et ajoutés dans le constucteur
+
+    ```
+        //pour gérer le status des utilisateurs
+        private final Map<String, String> userStatuses = new HashMap<>();
+        private final JComboBox<String> statusComboBox = new JComboBox<>(new String[] {"En ligne", "Absent", "Invisible", "Indisponible"});
+    ```
+    ```
+        // Panel en haut pour le statut
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(new JLabel("Statut : "), BorderLayout.WEST);
+        topPanel.add(statusComboBox, BorderLayout.CENTER);
+
+        // Ajouter un listener pour envoyer le statut lorsqu'il est changé
+        statusComboBox.addActionListener(e -> envoyerStatut());
+
+        // Ajoute ce panel en haut de la fenêtre
+        contentPane.add(topPanel, BorderLayout.NORTH);
+    ```
+
+**J'ai envoyé un message JSON au serveur afin de savoir le status changé**
+
+Dans la méthode **envoyerStatut()** j'envoie ma statut choisi au serveur afin qu'il soit au courant du changement de mon statut
+
+    ````
+        JSONObject json = new JSONObject();
+        json.put("type", "status");
+        json.put("user", clientInvite.getPseudo()); //pour l'identification côté serveur
+        json.put("state", state);
+    ````
+
+**Affichage des utilisateurs selon leur statut**
+
+J'ai fait un mise à jour dans l'affichage des autres utilisateurs dans la liste connectée en utilisant du text et icône (ex : point vert, gris, orange) coloré.
+
+Pour cela j'ai créé une classe interne `UserStatusRenderer`:
+
+la méthode **getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)** permet de coloré l'affichage des utilisatuers selon leur statut
+
+la méthode **createStatusDot(Color color)** crée et affiche le "point" à côté des noms d'utilisateurs selon leur statut
 
 
 **Finalisation graphique de l'interface Swing**
+
+- Vérification de tous les composants afin qu'ils soient alignés et lisibles.
+- Ajout des bordures, marges, icônes ou couleurs pour améliorer l'expérience utilisateur.
+- Gestion de la redimension du composant et la réactivité de l'application.
+
 
 **Tests croisés et débogage**
 
@@ -730,3 +864,5 @@ Résumé de la quatrième journée:
 - Interface Swing finale intégrant la gestion des statuts
 - Dossier de documentation (PDF ou README + captures)
 - Projet Maven archivable (zip ou Git)
+
+

@@ -1,6 +1,6 @@
 package fr.classcord.ui;
 
- //Frame du SelectionInterface
+ //Frame du ChoixModeUI
 import java.awt.BorderLayout;
 
 import javax.swing.BorderFactory;
@@ -14,7 +14,7 @@ import javax.swing.SwingUtilities;
 import fr.classcord.network.ClientInvite;
 
 
-public class SelectionInterface extends JFrame {
+public class ChoixModeUI extends JFrame {
 
     //propriétés
     private final ClientInvite clientInvite;
@@ -22,7 +22,7 @@ public class SelectionInterface extends JFrame {
     private final JButton btnLogin;
 
     //constructeur
-    public SelectionInterface(ClientInvite clientInvite){
+    public ChoixModeUI(ClientInvite clientInvite){
         this.clientInvite = clientInvite;
 
         setTitle("Choisissez une option");
@@ -48,28 +48,30 @@ public class SelectionInterface extends JFrame {
         parentPanel.add(panel, BorderLayout.CENTER);
         add(parentPanel);
 
-        btnInvite.addActionListener(e -> ouvrirFenetreInviteInterface());
-        btnLogin.addActionListener(e -> ouvrirLoginInterface());
+        btnInvite.addActionListener(e -> ouvrirFenetreGuestUI());
+        btnLogin.addActionListener(e -> ouvrirLoginUI());
     }
 
-    private void ouvrirFenetreInviteInterface() {
+    //méthodes
+    
+    private void ouvrirFenetreGuestUI() {
         dispose();
-        SwingUtilities.invokeLater(() -> new InviteInterface(clientInvite).setVisible(true));
+        SwingUtilities.invokeLater(() -> new GuestUI(clientInvite).setVisible(true));
         //lehet hogy nem kell : SwingUtilities.invokeLater(() ->   ) ?????
     }
 
-    private void ouvrirLoginInterface() {
-        SwingUtilities.invokeLater(() -> new LoginInterface(clientInvite).setVisible(true));
+    private void ouvrirLoginUI() {
+        SwingUtilities.invokeLater(() -> new LoginUI(clientInvite).setVisible(true));
          //lehet hogy nem kell : SwingUtilities.invokeLater(() ->   ) ?????
         dispose();
     }
 
     //Troisième jour: 18 juin 25 
-    //Méthode principale pour la SelectionInterface
+    //Méthode principale pour la ChoixModeUI
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() ->{
             ClientInvite clientInvite = new ClientInvite("invite");
-            new SelectionInterface(clientInvite).setVisible(true);
+            new ChoixModeUI(clientInvite).setVisible(true);
         });
     }
 }

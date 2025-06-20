@@ -161,14 +161,7 @@ public class ClientInvite {
                                     System.err.println("Réponse 'users' invalide: pas de champ de 'users'");
                                 }
                             }
-                             case "change_username" -> { ///modifier lehet hogy le kell venni
-                                 String newPseudo = json.getString("new_user");
-                                 System.out.println("Pseudo mis à jour : " + newPseudo);
-                                 this.setPseudo(newPseudo);
-                            }
-
-                            
-
+                           
                             default -> System.out.println("Type de message inconnu : " + type);
                         }
                     }else{

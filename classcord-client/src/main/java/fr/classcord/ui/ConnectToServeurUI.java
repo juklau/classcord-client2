@@ -19,8 +19,9 @@ import fr.classcord.network.ClientInvite;
 
 
 
-public class ConnexionInterface extends JFrame {
+public class ConnectToServeurUI extends JFrame {
 
+    //propriétés
     private final JTextField adresseIPServeur;
     private final JTextField adressePortServeur;
     private final JButton btnConnexionServeur;
@@ -28,7 +29,7 @@ public class ConnexionInterface extends JFrame {
     
 
     //Constructor
-    public ConnexionInterface(){
+    public ConnectToServeurUI(){
 
         setTitle("Connexion au Serveur");
         setSize(400, 250);
@@ -63,8 +64,9 @@ public class ConnexionInterface extends JFrame {
                 connectToServer();
             }
         });
-
     }
+
+    //méthodes
 
     private void connectToServer(){
         String ip = adresseIPServeur.getText().trim();
@@ -84,10 +86,10 @@ public class ConnexionInterface extends JFrame {
 
             if (connected) {
                 JOptionPane.showMessageDialog(this, "Connexion réussie au serveur " + ip + " : " + port);
-                dispose(); // Fermer ConnexionInterface
+                dispose(); // Fermer ConnexionToServeur
 
                 if (clientInvite != null) {
-                        SwingUtilities.invokeLater(() -> new SelectionInterface(clientInvite).setVisible(true));
+                        SwingUtilities.invokeLater(() -> new ChoixModeUI(clientInvite).setVisible(true));
                     } else {
                         System.err.println("Erreur : clientInvite est null !");
                     }
@@ -100,14 +102,12 @@ public class ConnexionInterface extends JFrame {
     }
 
     //Deuxième et Troisième jour:17-18 juin 25 
-    //Méthode principale pour la connexionInterface
+    //Méthode principale pour la ConnectToServuerUI
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() ->{
-            new ConnexionInterface().setVisible(true);
+            new ConnectToServeurUI().setVisible(true);
         });
     }
-
-
 }
 
 

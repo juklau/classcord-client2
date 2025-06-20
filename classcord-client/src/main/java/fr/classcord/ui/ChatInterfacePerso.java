@@ -4,20 +4,31 @@ package fr.classcord.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener; //gestion de la mise en page
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JFrame; //gestion des actions utilisateur
-import javax.swing.JList;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList; //gestion des actions utilisateur
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField; //gestion des actions utilisateur
-import javax.swing.SwingUtilities;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.SwingUtilities; //gestion des actions utilisateur
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import org.json.JSONObject;
 
@@ -29,7 +40,11 @@ public class ChatInterfacePerso extends JFrame {
 
     //propriétés
     private final JPanel contentPane;
-    private final JTextArea chatArea;
+
+    // private final JTextArea chatArea;
+    private final JTextPane chatArea = new JTextPane();
+    private final StyledDocument doc = chatArea.getStyledDocument();
+
     private final JTextField inputField;
     private final JButton sendButton;
     private final ClientInvite clientInvite;
@@ -38,6 +53,10 @@ public class ChatInterfacePerso extends JFrame {
     private final DefaultListModel<String> userListModel = new DefaultListModel<>();
     private final JList<String> userList = new JList<>(userListModel);
     private final Map<String, Color> userColors = new HashMap<>();
+
+    //pour gérer le status des utilisateurs
+    private final Map<String, String> userStatuses = new HashMap<>();
+    private final JComboBox<String> statusComboBox = new JComboBox<>(new String[] {"En ligne", "Absent", "Invisible", "Indisponible"});
 
 
     private final JButton globalButton = new JButton("Global");
@@ -66,9 +85,10 @@ public class ChatInterfacePerso extends JFrame {
         // contentPane.setLayout(null);
 
         // Zone de chat (non éditable)
-        chatArea = new JTextArea();
+        // chatArea = new JTextArea(); //avant la colorisation des messages
         chatArea.setEditable(false); //non modifiable
-        chatArea.setLineWrap(true); //retour à la ligne est automatique
+        // chatArea.setLineWrap(true); //retour à la ligne est automatique //avant la colorisation des messages
+        chatArea.setPreferredSize(new Dimension(400, 300));
 
         JScrollPane scrollPane = new JScrollPane(chatArea); //scroller sur chatArea
 
@@ -114,7 +134,19 @@ public class ChatInterfacePerso extends JFrame {
             }
         });
 
-        //pour tester s'il s'affiche
+        // Panel en haut pour le statut
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(new JLabel("Statut : "), BorderLayout.WEST);
+        topPanel.add(statusComboBox, BorderLayout.CENTER);
+
+        // Ajouter un listener pour envoyer le statut lorsqu'il est changé
+        statusComboBox.addActionListener(e -> envoyerStatut());
+
+        // Ajoute ce panel en haut de la fenêtre
+        contentPane.add(topPanel, BorderLayout.NORTH);
+
+
+        //pour tester s'il s'affiche dans le constructeur => répoons: oui
         // SwingUtilities.invokeLater(() -> {
         //     Map<String, String> testMap = new HashMap<>();
         //     testMap.put("Alice", "online");
@@ -122,6 +154,8 @@ public class ChatInterfacePerso extends JFrame {
         //     updateUserList(testMap);
         // });
     }
+
+    //méthodes
 
     // Envoi de message via `ClientInvite`
     private void sendMessage() {
@@ -146,21 +180,26 @@ public class ChatInterfacePerso extends JFrame {
             json.put("content", messageText);
 
             if(selectedUser != null && !selectedUser.isEmpty()){
-                //Envoyer un message privé
+                //Envoyer un message "privé"
                 json.put("subtype", "private");
                 json.put("to", selectedUser);
 
-                //affichage message privé avec préfixe
-                chatArea.append("**[MP à " + selectedUser + "]** " + messageText + "\n");
+                //Envoie message privé avec préfixe
+                // chatArea.append("**[MP à " + selectedUser + "]** " + messageText + "\n"); //avant la colorisation des messages
+                appendFormattedMessage(clientInvite.getPseudo(), "**[MP à " + selectedUser + "]** " + messageText + "\n", true);
             }else{
-                //envoyer un message global
+                //envoyer un message "global"
                 json.put("subtype", "global");
-                chatArea.append("Vous: " + messageText + "\n"); //afficher le message
+                json.put("to", "global");
+
+                // chatArea.append("Vous: " + messageText + "\n"); //afficher le message //avant la colorisation des messages
+                appendFormattedMessage(clientInvite.getPseudo(), messageText, false);
             }
             clientInvite.send(json.toString());
             inputField.setText("");
         }else{
-            chatArea.append("Erreur : Vous devez être connecté avant d'envoyer un message.\n");
+            // chatArea.append("Erreur : Vous devez être connecté avant d'envoyer un message.\n"); //avant la colorisation des messages
+            appendFormattedMessage("Système", "Erreur : Vous devez être connecté avant d'envoyer un message.\n", false);
         }        
     }
 
@@ -170,18 +209,6 @@ public class ChatInterfacePerso extends JFrame {
             sendMessage(); // Appelle la méthode pour envoyer le message
         }
     }
-
-   
-    private Color getColorForUser(String user){
-        int hash = user.hashCode();
-        int r = (hash >> 16) & 0xFF;
-        int g = (hash >> 8) & 0xFF;
-        int b = hash & 0xFF;
-
-        Color base = new Color(r, g, b);
-        return base.brighter(); //pour pas être trop foncé le couleur
-    }
-
 
     // Afficher le dernier message reçu
     public void afficheMessage(){
@@ -206,14 +233,17 @@ public class ChatInterfacePerso extends JFrame {
                 String from = json.optString("from");
                 String content = json.optString("content");
 
-                if("private".equals(subtype)){
+                appendFormattedMessage(from, content, "private".equals(subtype));
 
-                    //affichage message privé avec préfixe
-                    chatArea.append("**[MP à " + from + "]** " + content + "\n");
-                }else{
-                    chatArea.append("Message reçu de " + from + " : " + content + "\n");
-                }
+                // if("private".equals(subtype)){ //avant la colorisation des messages
+                //     //affichage de message "privé" avec préfixe
+                //     chatArea.append("**[MP de " + from + "]** " + content + "\n");
+                // }else{
+                //     //affichage de message "global"
+                //     chatArea.append(from + " : " + content + "\n");
+                // }
                 // placer le curseur de texte (caret) à la fin du contenu du chatArea afin de voir le dernier message
+
                 chatArea.setCaretPosition(chatArea.getDocument().getLength());
 
             } catch (Exception e) {
@@ -226,26 +256,178 @@ public class ChatInterfacePerso extends JFrame {
     public void updateUserList(Map<String, String> userMap){
         SwingUtilities.invokeLater(() -> {
             userListModel.clear();
+            userStatuses.clear();
             System.out.println("🧾 Mise à jour de la liste d'utilisateurs connectés :");
 
-            for (Map.Entry<String, String> entry: userMap.entrySet()){ //ex: dodo, online
+            String localUser = clientInvite.getPseudo();
+            for (Map.Entry<String, String> entry : userMap.entrySet()) {
                 String pseudo = entry.getKey();
                 String statut = entry.getValue();
 
-                if("online".equalsIgnoreCase(statut)) {
-                    userListModel.addElement(pseudo);
-                    System.out.println("Résultat: " + pseudo + " est en ligne."); //ça fonctionne 
+                boolean isLocalUser = localUser != null && localUser.equals(pseudo);
+
+                if (!statut.equalsIgnoreCase("invisible") || isLocalUser) {
+                    userStatuses.put(pseudo, statut);
+
+                    if (!userListModel.contains(pseudo)) {
+                        userListModel.addElement(pseudo);
+                    }
                 }
+
+                // if("online".equalsIgnoreCase(statut)) { //avant le différantiation de "statut"
+                //     userListModel.addElement(pseudo);
+                //     System.out.println("Résultat: " + pseudo + " est en ligne."); //ça fonctionne 
+                // }
             }
 
             //ajouter le pseudo local s'il n'est pas déjà dans la liste
-            String localUser = clientInvite.getPseudo();
-            if(localUser != null && !localUser.isEmpty() && !userListModel.contains(localUser)){
+           if(localUser != null && !localUser.isEmpty() && !userListModel.contains(localUser)){
                 userListModel.addElement(localUser);
+                userStatuses.put(localUser, "online");
                 System.out.println("Ajoute de l'utilisateur local : " + localUser);
             }
+
+            userList.setCellRenderer(new UserStatusRenderer());
         });
     }
+
+    //définir la couleur de chaque utilisateur
+    public Color getColorForUser(String user){
+        if (userColors.containsKey(user)) {
+            return userColors.get(user);
+        }
+
+        int hash = Math.abs(user.hashCode()); //garantit que chaque pseudo aura une base différente
+        // >> => décale les bits vers la droit
+        // & 0xFF => pour garder que 8 bits (entre 0 et 255)
+        //                                  => r bits 16 à 23
+        //                                  => g bits 8 à 15
+        //                                  => b bits 0 à 7
+        int r = (hash >> 16) & 0xFF; 
+        int g = (hash >> 8) & 0xFF;
+        int b = hash & 0xFF;
+
+        // afin d'empêcher d’avoir du noir ou du blanc
+        r = (r + 100) % 256;
+        g = (g + 100) % 256;
+        b = (b + 100) % 256;
+
+        Color color = new Color(r, g, b);
+        userColors.put(user, color);
+        return color;
+    }
+
+    //afin d'afficher l'écriture des utilisatuers en couleur
+    public void appendFormattedMessage(String from, String content, boolean isPrivate){
+        try {
+            //Message coloré pour l'utilisateur
+            Style fullStyle = chatArea.addStyle("full_" + from, null);
+            StyleConstants.setForeground(fullStyle, getColorForUser(from));
+            StyleConstants.setBold(fullStyle, true); //font Bold
+
+            String textToInsert;
+            if(isPrivate){
+                textToInsert = "**[MP de " + from + "]** " + content + "\n";
+            }else{
+                textToInsert = from + " : " + content + "\n";
+            }
+
+            doc.insertString(doc.getLength(), textToInsert, fullStyle);
+            chatArea.setCaretPosition(doc.getLength());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //pour envoyer le "statut" choisi
+    private void envoyerStatut(){
+
+        if (clientInvite == null || clientInvite.getPseudo() == null || clientInvite.getPseudo().isEmpty()) {
+            System.err.println("Client non initialisé ou pseudo invalide.");
+            return;
+        }
+
+        String selection = (String) statusComboBox.getSelectedItem();
+
+        //correspondance entre libellé UI et codes de statut
+         String state = switch (selection) {
+            case "Absent" -> "away";
+            case "Indisponible" -> "dnd";        // Do Not Disturb
+            case "Invisible" -> "invisible";
+            case "En ligne", "Disponible" -> "online"; // pour plus de flexibilité
+            default -> "online";                 // sécurité par défaut
+        };
+
+        JSONObject json = new JSONObject();
+        json.put("type", "status");
+        json.put("user", clientInvite.getPseudo()); //pour l'identification côté serveur
+        json.put("state", state);
+
+        
+        clientInvite.send(json.toString());
+
+        // Mise à jour immédiate locale (avant que le serveur ne le renvoie)
+
+        //mettre à jour le map "userStatuses" => stocke les statuts de tous les utilisateurs
+        userStatuses.put(clientInvite.getPseudo(), state); 
+
+        //retirer user local de la liste graphique de tous les utilisateurs connectés affichée dans la JList
+        userListModel.removeElement(clientInvite.getPseudo());
+
+        //déclenche une actualisation de l'interface graphique.
+        userListModel.addElement(clientInvite.getPseudo());
+
+        // rafraîchit complètement le rendu (comme un repaint)
+        userList.setCellRenderer(new UserStatusRenderer());  // Reforçage du rendu
+    }
+
+    // === Classe interne pour personnaliser l'affichage des utilisateurs dans une JList (liste graphique). ===
+    private class UserStatusRenderer extends DefaultListCellRenderer { 
+        //extends DefaultListCellRenderer => permet de surcharger le rendu visuel des éléments dans une JList
+
+        @Override
+        // pour personnaliser l'apparence d'un élémnent de la liste
+        public java.awt.Component getListCellRendererComponent(JList<?> list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+
+            JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            String user = (String) value; //caster l'objet "value" en String
+            String status = userStatuses.getOrDefault(user, "online"); //si le statut n'est pas trouvé => "online" par défault
+
+            Color color;
+            switch (status) {
+                case "away" -> color = Color.ORANGE;
+                case "dnd" -> color = Color.RED;
+                case "invisible" -> color = Color.GRAY;
+                default -> color = new Color(0, 153, 0); // vert foncé =>online
+            }
+
+            // label.setText(user + " (" + status + ")"); //affichage de statut avec text
+            label.setText(user);
+            label.setForeground(color); //application de la couleur chosie au texte du label
+            label.setIcon(createStatusDot(color));
+            label.setIconTextGap(8);
+            label.setOpaque(true);
+            label.setBackground(isSelected ? new Color(220, 220, 220) : Color.WHITE);
+           
+            return label; //sera affiché dans la JList
+        }
+
+        private Icon createStatusDot(Color color){
+            int size = 14; //=>14 pixels
+            BufferedImage image=  new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB); //création une image vide
+            Graphics2D g2 = image.createGraphics(); //récupèration du "pinceau" (Graphics2D) pour dessiner dans l’image.
+
+            //activation de l’antialiasing pour des bords lisses afin d'éviter le cercle pixélisé
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); 
+            g2.setColor(color); //choix la couleur du cercel
+            g2.fillOval(0, 0, size, size); //dessine un ovale rempli
+            g2.dispose(); //libèration les ressources graphiques utilisées (bonne pratique avec Graphics2D).
+            return new ImageIcon(image);
+        }
+    }
+
 
     //Troisième jour: 18 juin 25 =>peut être mettre en commentaire
     //Méthode principale pour la ChatInterface
@@ -258,6 +440,4 @@ public class ChatInterfacePerso extends JFrame {
             ui.setVisible(true); 
         });
     }
-
-    
 }

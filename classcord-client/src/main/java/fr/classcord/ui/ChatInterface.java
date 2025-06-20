@@ -1,8 +1,10 @@
 package fr.classcord.ui;
 
+//CETTE INTERFACE NE FONCTIONNE PLUS
 
  //Frame du TChat
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent; //gestion de la mise en page
 import java.awt.event.ActionListener; //gestion des actions utilisateur
@@ -17,31 +19,35 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import org.json.JSONObject;
 
-import fr.classcord.model.Message;
 import fr.classcord.network.ClientInvite;
 
 
 public class ChatInterface extends JFrame {
 
+    //propriétés
     private final JPanel contentPane;
     private final JTextField adresseIP;
     private final JTextField adressePort;
     private final JTextField pseudo;
-    private final JTextArea chatArea;
+    // private final JTextArea chatArea;  //avant la colorisation des messages
+    private final JTextPane chatArea = new JTextPane();
+    // private final StyledDocument doc = chatArea.getStyledDocument();
     private final JTextField inputField;
     private final JButton sendButton;
     private ClientInvite clientInvite;
+    private ChatInterfacePerso chatInterfacePerso;
 
     //pour afficher les pax connectés
     private final DefaultListModel<String> userListModel = new DefaultListModel<>();
     private final JList<String> userList = new JList<>(userListModel);
+
 
     //Constructeur
     public ChatInterface(ClientInvite clientInvite) {
@@ -93,16 +99,17 @@ public class ChatInterface extends JFrame {
         });
          
         // Zone de chat (non éditable)
-        chatArea = new JTextArea();
+        // chatArea = new JTextArea(); //avant la colorisation des messages
         chatArea.setEditable(false); //non modifiable
-        chatArea.setLineWrap(true); //retour à la ligne est automatique
+        chatArea.setPreferredSize(new Dimension(400, 300));
+        // chatArea.setLineWrap(true); //retour à la ligne est automatique //avant la colorisation des messages
 
         JScrollPane scrollPane = new JScrollPane(chatArea); //scroller sur chatArea
 
         //mettre le chatArea au milieu
         contentPane.add(scrollPane, BorderLayout.CENTER);
 
-        // Panel pour l'entrée de message et le bouton envoyer
+        //Panel pour l'entrée de message et le bouton envoyer
         JPanel inputPanel = new JPanel(new BorderLayout());
 
         inputField = new JTextField();
@@ -119,6 +126,8 @@ public class ChatInterface extends JFrame {
         contentPane.add(inputPanel, BorderLayout.SOUTH); //mettre le champ et le bouton en bas
     }
 
+    //méthodes
+
     //connexion au serveur en cliquant sur le "connexion" et en entrant tous les paramètres
     private void btnConnexion_clic(){
        String pseudoText = pseudo.getText().trim();
@@ -130,24 +139,29 @@ public class ChatInterface extends JFrame {
        try{
             port = Integer.parseInt(adressePort.getText().trim());
        }catch (NumberFormatException ex){
-            chatArea.append("⚠ Le port doit être un nombre entier valide.\n"); 
+            // chatArea.append("⚠ Le port doit être un nombre entier valide.\n"); //avant la colorisation des messages
+            chatInterfacePerso.appendFormattedMessage("Système", "⚠ Le port doit être un nombre entier valide.", false);
             return;
        }
 
        if(!pseudoText.isEmpty() && !ipText.isEmpty()){
-            chatArea.append("Connexion en cours...");
+            // chatArea.append("Connexion en cours..."); //avant la colorisation des messages
+            chatInterfacePerso.appendFormattedMessage("Système", "Connexion en cours...", false);
 
             //Instancier ClientInvite avec le pseudo
             clientInvite = new ClientInvite(pseudoText);
 
             //Lancer la connexion
             if(clientInvite.connect(ipText, port)){
-                chatArea.append("Connecté au serveur " + ipText + " : " + port + "\n");
+                // chatArea.append("Connecté au serveur " + ipText + " : " + port + "\n"); //avant la colorisation des messages
+                 chatInterfacePerso.appendFormattedMessage("Système", "✅ Connecté au serveur " + ipText + " : " + port, false);
             }else{
-                chatArea.append("Erreur de connexion. \n");
+                // chatArea.append("Erreur de connexion. \n"); //avant la colorisation des messages
+                chatInterfacePerso.appendFormattedMessage("Système", "❌ Erreur de connexion.", false);
             } 
        }else{
-            chatArea.append("Entrez un pseudo, un adresse IP et un adresse Port \n");
+            // chatArea.append("Entrez un pseudo, un adresse IP et un adresse Port \n"); //avant la colorisation des messages
+           chatInterfacePerso.appendFormattedMessage("Système", "Entrez un pseudo, une adresse IP et un port.", false);
        }
     }
 
@@ -156,12 +170,6 @@ public class ChatInterface extends JFrame {
     private void sendMessage() {
         if(clientInvite != null){
             String messageText = inputField.getText().trim(); //on "lit" le texte du champ
-            //  AVANT la séparation => individuel ou global
-            // if (!messageText.isEmpty()) {
-            //     clientInvite.sendMessage(messageText);
-            //     chatArea.append("Vous: " + messageText + "\n"); //afficher le message
-            //     inputField.setText(""); //vider le champ  
-            // }
 
             if(messageText.isEmpty()){
                 return;
@@ -175,21 +183,27 @@ public class ChatInterface extends JFrame {
             json.put("content", messageText);
 
             if(selectedUser != null && !selectedUser.isEmpty()){
-                //Envoyer un message privé
+
+                //Envoyer un message "privé"
                 json.put("subtype", "private");
                 json.put("to", selectedUser);
 
-                //affichage message privé avec préfixe
-                chatArea.append("**[MP à " + selectedUser + "]** " + messageText + "\n");
+                //Envoie message privé avec préfixe
+                // chatArea.append("**[MP à " + selectedUser + "]** " + messageText + "\n"); //avant la colorisation des messages
+                chatInterfacePerso.appendFormattedMessage(clientInvite.getPseudo(), "**[MP à " + selectedUser + "]** " + messageText + "\n", true);
             }else{
-                //envoyer un message global
+                //envoyer un message "global"
                 json.put("subtype", "global");
-                chatArea.append("Vous: " + messageText + "\n"); //afficher le message
+                json.put("to", "global");
+
+                // chatArea.append("Vous: " + messageText + "\n"); //avant la colorisation des messages
+                chatInterfacePerso.appendFormattedMessage(clientInvite.getPseudo(), messageText, false);
             }
             clientInvite.send(json.toString());
             inputField.setText("");
         }else{
-            chatArea.append("Erreur : Vous devez être connecté avant d'envoyer un message.\n");
+            // chatArea.append("Erreur : Vous devez être connecté avant d'envoyer un message.\n"); //avant la colorisation des messages
+            chatInterfacePerso.appendFormattedMessage("Système", "Erreur : Vous devez être connecté avant d'envoyer un message.\n", false);
         }        
     }
 
@@ -201,7 +215,7 @@ public class ChatInterface extends JFrame {
         }
     }
 
-    //pour mettre à jour dynamiquement les personnes connectés
+   //pour mettre à jour dynamiquement les personnes connectés
     public void updateUserList(Map<String, String> userMap){
         SwingUtilities.invokeLater(() -> {
             userListModel.clear();
@@ -216,36 +230,49 @@ public class ChatInterface extends JFrame {
                     System.out.println("Résultat: " + pseudo + " est en ligne."); //ça fonctionne 
                 }
             }
+
+            //ajouter le pseudo local s'il n'est pas déjà dans la liste
+            String localUser = clientInvite.getPseudo();
+            if(localUser != null && !localUser.isEmpty() && !userListModel.contains(localUser)){
+                userListModel.addElement(localUser);
+                System.out.println("Ajoute de l'utilisateur local : " + localUser);
+            }
         });
     }
 
-   
 
     // Afficher le dernier message reçu
-    // public void afficheMessage(){ // régi ha az alatta lévö jo akkor ezt torolni!!!!!!!
-    //     String lastMessageJSON = clientInvite.getLastMessage();
-    //     if(lastMessageJSON != null && !lastMessageJSON.isEmpty()){
-    //         Message lastMessageString = Message.fromJson(lastMessageJSON); //convertion en message "normal"
-    //         chatArea.append("Message reçu de " + lastMessageString.getFrom() + " : "+ lastMessageString.getContent() + "\n");
-    //         chatArea.setCaretPosition(chatArea.getDocument().getLength());
-    //         chatArea.repaint();
-    //         chatArea.revalidate();
-    //     }
-    // }
-
-
-    public void afficheMessage(){ 
+    public void afficheMessage(){
         String lastMessageJSON = clientInvite.getLastMessage();
         if(lastMessageJSON != null && !lastMessageJSON.isEmpty()){
 
-            try{
-                 Message lastMessageString = Message.fromJson(lastMessageJSON); //convertion en message "normal"
-                chatArea.append("Message reçu de " + lastMessageString.getFrom() + " : "+ lastMessageString.getContent() + "\n");
+            try {
+                JSONObject json = new JSONObject(lastMessageJSON);
+
+                String type = json.optString("type");
+                if(!"message".equals(type)){
+                    return;
+                }
+                
+                String subtype = json.optString("subtype");
+                String from = json.optString("from");
+                String content = json.optString("content");
+
+                chatInterfacePerso.appendFormattedMessage(from, content, "private".equals(subtype));
+
+                // if("private".equals(subtype)){ //avant la colorisation des messages
+                //     //affichage de message "privé" avec préfixe
+                //     chatArea.append("**[MP de " + from + "]** " + content + "\n");
+                // }else{
+                //     //affichage de message "global"
+                //     chatArea.append(from + " : " + content + "\n");
+                // }
+                // placer le curseur de texte (caret) à la fin du contenu du chatArea afin de voir le dernier message
+
                 chatArea.setCaretPosition(chatArea.getDocument().getLength());
-                chatArea.repaint();
-                chatArea.revalidate();
-            }catch (Exception e){
-                System.err.println("Erreur lors de l'affichage du message : " + e.getMessage());
+
+            } catch (Exception e) {
+                System.out.println("Erreur dans afficheMessage() " + e.getMessage());
             }
         }
     }
