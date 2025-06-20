@@ -256,10 +256,13 @@ public class ChatInterfacePerso extends JFrame {
     public void updateUserList(Map<String, String> userMap){
         SwingUtilities.invokeLater(() -> {
             userListModel.clear();
-            userStatuses.clear();
-            System.out.println("🧾 Mise à jour de la liste d'utilisateurs connectés :");
+            // userStatuses.clear();
+
+            System.out.println("Mise à jour de la liste d'utilisateurs connectés :");
 
             String localUser = clientInvite.getPseudo();
+
+            
             for (Map.Entry<String, String> entry : userMap.entrySet()) {
                 String pseudo = entry.getKey();
                 String statut = entry.getValue();
@@ -267,11 +270,20 @@ public class ChatInterfacePerso extends JFrame {
                 boolean isLocalUser = localUser != null && localUser.equals(pseudo);
 
                 if (!statut.equalsIgnoreCase("invisible") || isLocalUser) {
-                    userStatuses.put(pseudo, statut);
+                      
+                    // Si c'est le localUser ET qu'on a déjà un statut, on ne remplace pas
+                    if (isLocalUser && userStatuses.containsKey(localUser)) {
+                        // On conserve l'ancien statut local
+                        System.out.println("Conservation du statut local existant : " + userStatuses.get(localUser));
+                    } else {
+                        // Sinon on met à jour le statut normalement
+                        userStatuses.put(pseudo, statut);
+                    }
 
                     if (!userListModel.contains(pseudo)) {
                         userListModel.addElement(pseudo);
                     }
+                    System.out.println("✔ " + pseudo + " : " + statut);
                 }
 
                 // if("online".equalsIgnoreCase(statut)) { //avant le différantiation de "statut"
@@ -281,10 +293,31 @@ public class ChatInterfacePerso extends JFrame {
             }
 
             //ajouter le pseudo local s'il n'est pas déjà dans la liste
-           if(localUser != null && !localUser.isEmpty() && !userListModel.contains(localUser)){
-                userListModel.addElement(localUser);
-                userStatuses.put(localUser, "online");
-                System.out.println("Ajoute de l'utilisateur local : " + localUser);
+            if(localUser != null && !userMap.containsKey(localUser)){
+                
+                //pour éviter qu'il me remets à chaque evenement en couleur vert en écrasant mon statut existant
+                if(!userStatuses.containsKey(localUser)){
+
+                    String currentStatus = (String) statusComboBox.getSelectedItem();
+                    String normalizedStatus = switch (currentStatus) {
+                    case "Absent" -> "away";
+                    case "Indisponible" -> "dnd";
+                    case "Invisible" -> "invisible";
+                    case "En ligne", "Disponible" -> "online";
+                    default -> "online";
+                };
+                userStatuses.put(localUser, normalizedStatus);
+               
+                System.out.println("Statut local déterminé depuis statusComboBox : " + normalizedStatus);
+                }else{
+                     System.out.println("Statut local conservé : " + userStatuses.get(localUser));
+                }
+
+                if (!userListModel.contains(localUser)) {
+                    userListModel.addElement(localUser);
+                }
+               
+                System.out.println("Ajout manuel de l'utilisateur local : " + localUser);
             }
 
             userList.setCellRenderer(new UserStatusRenderer());

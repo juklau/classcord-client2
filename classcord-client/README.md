@@ -854,8 +854,45 @@ la méthode **createStatusDot(Color color)** crée et affiche le "point" à côt
 - Ajout des bordures, marges, icônes ou couleurs pour améliorer l'expérience utilisateur.
 - Gestion de la redimension du composant et la réactivité de l'application.
 
+## L'image de l'interface de Chat se trouve dans le dossier image sous le nom `Interface Swing final`
 
 **Tests croisés et débogage**
+
+**Problème trouvé: il remets mon statut en "online" après chaque évenement dans le chat**
+
+Pour éviter ça il a fallu que je corrige le méthode **updateUserList(Map<String, String> userMap)**
+
+J'ai ajouté une condition: si mon statut existe déjà dans "userStatuses", il ne écrasera pas mon "statut"
+Voici la modification:
+
+    ```
+        if(localUser != null && !userMap.containsKey(localUser)){
+            
+            //pour éviter qu'il me remets à chaque evenement en couleur vert en écrasant mon statut existant
+            if(!userStatuses.containsKey(localUser)){
+
+                String currentStatus = (String) statusComboBox.getSelectedItem();
+                String normalizedStatus = switch (currentStatus) {
+                case "Absent" -> "away";
+                case "Indisponible" -> "dnd";
+                case "Invisible" -> "invisible";
+                case "En ligne", "Disponible" -> "online";
+                default -> "online";
+            };
+            userStatuses.put(localUser, normalizedStatus);
+            
+            System.out.println("Statut local déterminé depuis statusComboBox : " + normalizedStatus);
+            }else{
+                    System.out.println("Statut local conservé : " + userStatuses.get(localUser));
+            }
+
+            if (!userListModel.contains(localUser)) {
+                userListModel.addElement(localUser);
+            }
+            
+            System.out.println("Ajout manuel de l'utilisateur local : " + localUser);
+        }
+    ```
 
 
 
@@ -866,3 +903,8 @@ Résumé de la quatrième journée:
 - Projet Maven archivable (zip ou Git)
 
 
+**source de code**
+- aide de IA
+- https://stackoverflow.com/questions/34719923/how-do-i-load-an-animated-gif-within-my-jframe-while-a-long-process-is-running
+- https://stackoverflow.com/questions/34262447/java-applet-setforeground-what-exactly-it-does-and-how-to-see-its-effect
+- Projet du Jeu en Java (Cours SLAM)

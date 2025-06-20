@@ -279,16 +279,16 @@ public class ChatInterface extends JFrame {
     
 
     //Deuxième jour:17 juin 25 =>peut être mettre en commentaire
-    //Méthode principale pour la ChatInterface
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> { //pour lancer l'UI dans le bon thread (thread graphique)
+    // //Méthode principale pour la ChatInterface
+    // public static void main(String[] args) {
+    //     SwingUtilities.invokeLater(() -> { //pour lancer l'UI dans le bon thread (thread graphique)
 
-            //Instanciation du clientInvite
-            ClientInvite clientInvite = new ClientInvite("invité"); 
-            ChatInterface ui = new ChatInterface(clientInvite);
-            ui.setVisible(true); 
-        });
-    }
+    //         //Instanciation du clientInvite
+    //         ClientInvite clientInvite = new ClientInvite("invité"); 
+    //         ChatInterface ui = new ChatInterface(clientInvite);
+    //         ui.setVisible(true); 
+    //     });
+    // }
 }
 
 
