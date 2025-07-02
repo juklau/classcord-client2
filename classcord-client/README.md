@@ -903,7 +903,7 @@ Résumé de la quatrième journée:
 - Projet Maven archivable (zip ou Git)
 
 
-**source de code**
+**source de code et documentation**
 - aide de IA
 - https://stackoverflow.com/questions/34719923/how-do-i-load-an-animated-gif-within-my-jframe-while-a-long-process-is-running
 - https://stackoverflow.com/questions/34262447/java-applet-setforeground-what-exactly-it-does-and-how-to-see-its-effect

@@ -43,7 +43,7 @@ public class ConnectToServeurUI extends JFrame {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
 
         panel.add(new JLabel("Adresse IP: "));
-        adresseIPServeur = new JTextField("10.0.108.52");
+        adresseIPServeur = new JTextField("127.0.0.1");
         panel.add(adresseIPServeur);
 
         panel.add(new JLabel("Adresse Port: "));
