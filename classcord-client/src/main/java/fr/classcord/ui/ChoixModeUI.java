@@ -11,19 +11,22 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import fr.classcord.network.ClientInvite;
+import fr.classcord.controller.SessionController;
+import fr.classcord.model.ClientInvite;
 
 
 public class ChoixModeUI extends JFrame {
 
     //propriétés
     private final ClientInvite clientInvite;
+    private final SessionController controller;
     private final JButton btnInvite;
     private final JButton btnLogin;
 
     //constructeur
     public ChoixModeUI(ClientInvite clientInvite){
         this.clientInvite = clientInvite;
+        this.controller = new SessionController(clientInvite);
 
         setTitle("Choisissez une option");
         setSize(400, 150);
@@ -48,23 +51,16 @@ public class ChoixModeUI extends JFrame {
         parentPanel.add(panel, BorderLayout.CENTER);
         add(parentPanel);
 
-        btnInvite.addActionListener(e -> ouvrirFenetreGuestUI());
-        btnLogin.addActionListener(e -> ouvrirLoginUI());
+        btnInvite.addActionListener(e -> {
+            dispose();
+            controller.ouvrirFenetreGuestUI();
+        });
+        btnLogin.addActionListener(e -> {
+            controller.ouvrirLoginUI();
+            dispose();
+        });
     }
 
-    //méthodes
-    
-    private void ouvrirFenetreGuestUI() {
-        dispose();
-        SwingUtilities.invokeLater(() -> new GuestUI(clientInvite).setVisible(true));
-        //lehet hogy nem kell : SwingUtilities.invokeLater(() ->   ) ?????
-    }
-
-    private void ouvrirLoginUI() {
-        SwingUtilities.invokeLater(() -> new LoginUI(clientInvite).setVisible(true));
-         //lehet hogy nem kell : SwingUtilities.invokeLater(() ->   ) ?????
-        dispose();
-    }
 
     //Troisième jour: 18 juin 25 
     //Méthode principale pour la ChoixModeUI

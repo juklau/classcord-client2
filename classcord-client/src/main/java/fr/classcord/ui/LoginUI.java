@@ -19,10 +19,12 @@ import javax.swing.JPasswordField; //gestion des actions utilisateur
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import fr.classcord.controller.LoginController;
 import org.json.JSONObject;
 
-import fr.classcord.model.User;
-import fr.classcord.network.ClientInvite;
+import fr.classcord.model.ClientInvite;
+import fr.classcord.controller.ChatController;
+import fr.classcord.controller.AuthController;
 
 public class LoginUI extends JFrame{
 
@@ -32,13 +34,102 @@ public class LoginUI extends JFrame{
     private final JPasswordField passwordField;
     private final JButton loginButton;
     private final JButton registerButton;
-    private ClientInvite clientInvite;
-    private final JLabel loaderLabel;
-   
 
-    //Constructor
+    private final JLabel loaderLabel;
+    private ChatController chatController;
+    private LoginController loginController;
+
+
+    //méthodes
+
+    //authentification de user par LOGIN
+    private void authenticateUser(String type){
+        // loaderLabel.setVisible(true);
+
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+
+        if(username.isEmpty() || password.isEmpty()){
+            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
+            return;
+        }
+
+        loaderLabel.setVisible(true);
+        loginButton.setEnabled(false);
+        registerButton.setEnabled(false);
+
+        loginController.login(username, password, this,
+                () -> {
+                    saveLastUsername(username);
+                    JOptionPane.showMessageDialog(this, "Bienvenue " + username);
+                    openChatWindow();
+                    dispose();
+                },
+                () -> {
+                    loginButton.setEnabled(true);
+                    registerButton.setEnabled(true);
+                    loaderLabel.setVisible(false);
+                }
+        );
+    }
+
+    // Registration puis en cas de succes => login automatiquement
+    private void loginApresRegistration(){
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+
+        if(username.isEmpty() || password.isEmpty()){
+            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
+            return;
+        }
+
+        loaderLabel.setVisible(true);
+        loginButton.setEnabled(false);
+        registerButton.setEnabled(false);
+
+        loginController.registerThenLogin(username, password, this,
+                () -> {
+                    saveLastUsername(username);
+                    JOptionPane.showMessageDialog(this, "Bienvenue " + username);
+                    openChatWindow();
+                    dispose();
+                },
+                () -> {
+                    loginButton.setEnabled(true);
+                    registerButton.setEnabled(true);
+                    loaderLabel.setVisible(false);
+                }
+                );
+    }
+
+    /*private void openChatWindow() { //régi
+        new ChatPersoUI(clientInvite).setVisible(true);
+    }*/
+
+    private void openChatWindow() {
+        new ChatPersoUI(loginController.getClientInvite()).setVisible(true);
+    }
+
+    //Mémoriser le nom du dernière utilisateur
+     private void saveLastUsername(String username) {
+        try (FileWriter writerUserName = new FileWriter("lastuser.txt")) {
+            writerUserName.write(username);
+        } catch (IOException ignored) {
+        }
+    }
+
+    //lire le nom du dernière utilisateur
+    private String readLastUsername() {
+        try (BufferedReader readerUserName = new BufferedReader(new FileReader("lastuser.txt"))) {
+            return readerUserName.readLine();
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    //Constructeur
     public LoginUI(ClientInvite clientInvite){
-        this.clientInvite=clientInvite;
+        this.loginController = new LoginController(clientInvite);
 
         setTitle("Connexion au Chat");
         setSize(400, 250);
@@ -53,7 +144,7 @@ public class LoginUI extends JFrame{
 
         panel.add(new JLabel("Nom d'utilisateur :"));
         usernameField = new JTextField();
-        
+
         //pour afficher le dernier username
         // String lastUsername = User.loadLastUsername();
         // usernameField.setText(lastUsername);
@@ -75,7 +166,6 @@ public class LoginUI extends JFrame{
         // loaderLabel.setPreferredSize(new Dimension(50, 50)); // Ajuste selon la taille du GIF
 
         parentPanel.add(loaderLabel, BorderLayout.NORTH);
-
         parentPanel.add(panel, BorderLayout.SOUTH);
         add(parentPanel);
 
@@ -86,171 +176,6 @@ public class LoginUI extends JFrame{
 
         loginButton.addActionListener(e -> authenticateUser("login"));
         registerButton.addActionListener(e -> loginApresRegistration());
-    }
-
-    //méthodes
-
-    //authentification de user par LOGIN
-    private void authenticateUser(String type){
-        // loaderLabel.setVisible(true);
-
-        String username = usernameField.getText().trim();
-        String password = new String(passwordField.getPassword()).trim();
-
-            
-        if(username.isEmpty() || password.isEmpty()){
-            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
-            return;
-        }
-
-        loaderLabel.setVisible(true);
-        loginButton.setEnabled(false);
-        registerButton.setEnabled(false);
-
-        new Thread(() -> {
-
-             // toute interaction avec l'interface utilisateur Swing doit être exécutée dans le thread de l'UI → 
-            // et c’est exactement le rôle de SwingUtilities.invokeLater.
-            try {
-                String response = User.login(clientInvite, username, password);
-                JSONObject resp = new JSONObject(response);
-                if(resp.optString("status").equals("ok")){
-                    saveLastUsername(username);
-
-                    clientInvite.setPseudo(username);
-                    clientInvite.notifyOnlineStatus(); //je dis au serveur que je suis "online"
-
-                    // Ajoute l'utilisateur local à la liste onlineUsers
-                    // onlineUsers.add(username);
-                    // refreshUserList();
-
-                    // préparation de la requête pour récupérer la lise des utilisateus en ligne
-                    JSONObject requestUserList = new JSONObject();
-                    requestUserList.put("type", "users"); 
-
-                    //envoie la requête au serveur
-                    clientInvite.send(requestUserList.toString()); 
-
-                    SwingUtilities.invokeLater(() -> { //exécuter du code sur le thread de l’interface graphique 
-                        JOptionPane.showMessageDialog(this, "Bienvenue " + username);
-                        openChatWindow();
-                        dispose();
-                    });
-                }else{
-                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(this, "Échec pendant l'authentification");
-                        loginButton.setEnabled(true);
-                        registerButton.setEnabled(true);
-                        loaderLabel.setVisible(false);
-                    });
-                }
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> {
-                    JOptionPane.showMessageDialog(this, "Erreur : " + e.getMessage()); 
-                    loginButton.setEnabled(true);
-                    registerButton.setEnabled(true);
-                    loaderLabel.setVisible(false);
-                });
-            }
-        }).start();
-    }
-
-    // Registration puis en cas de succes => login automatiquement
-    private void loginApresRegistration(){
-
-        String username = usernameField.getText().trim();
-        String password = new String(passwordField.getPassword()).trim();
-
-        if(username.isEmpty() || password.isEmpty()){
-            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
-            return;
-        }
-
-        loaderLabel.setVisible(true);
-        loginButton.setEnabled(false);
-        registerButton.setEnabled(false);
-
-        new Thread(() -> {
-            // toute interaction avec l'interface utilisateur Swing doit être exécutée dans le thread de l'UI → 
-            // et c’est exactement le rôle de SwingUtilities.invokeLater.
-            try {
-                String registerResponse = User.register(clientInvite, username, password);
-                JSONObject registerResp = new JSONObject(registerResponse);
-
-                if(registerResp.optString("status").equals("ok")){
-
-                    //après registration on fait le login
-                    JOptionPane.showMessageDialog(this, "Inscription réussie \n Veuillez-vous connectez!");
-                    String loginResponse = User.login(clientInvite, username, password);
-                    JSONObject loginResp = new JSONObject(loginResponse);
-                    if(loginResp.optString("status").equals("ok")){
-                        saveLastUsername(username);
-
-                        clientInvite.setPseudo(username);
-                        clientInvite.notifyOnlineStatus(); //je dis au serveur que je suis "online"
-
-                        // Ajoute l'utilisateur local à la liste onlineUsers
-                        // onlineUsers.add(username);
-                        // refreshUserList();
-
-                        // préparation de la requête pour récupérer la lise des utilisateus en ligne
-                        JSONObject requestUserList = new JSONObject();
-                        requestUserList.put("type", "connected_users"); 
-
-                        //envoie la requête au serveur
-                        clientInvite.send(requestUserList.toString()); 
-                        
-                        SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(this, "Bienvenue " + username);
-                            openChatWindow();
-                            dispose();
-                        });
-                    }else{
-                         SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(this, "Échec pendant l'authentification");
-                            loginButton.setEnabled(true);
-                            registerButton.setEnabled(true);
-                            loaderLabel.setVisible(false);
-                        });
-                    }
-                }else{
-                    //Erreur pendant l'inscription
-                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(this, "Erreur pendant l'inscription");
-                        loginButton.setEnabled(true);
-                        registerButton.setEnabled(true);
-                        loaderLabel.setVisible(false); // n'oublie pas le loader au passage
-                    });
-                }
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> {
-                    JOptionPane.showMessageDialog(this, "Erreur : " + e.getMessage()); 
-                    loginButton.setEnabled(true);
-                    registerButton.setEnabled(true);
-                    loaderLabel.setVisible(false);
-                });
-            }
-        }).start();
-    }
-
-    private void openChatWindow() {
-        new ChatInterfacePerso(clientInvite).setVisible(true);
-    }
-
-    //Mémoriser
-     private void saveLastUsername(String username) {
-        try (FileWriter writerUserName = new FileWriter("lastuser.txt")) {
-            writerUserName.write(username);
-        } catch (IOException ignored) {
-        }
-    }
-
-    private String readLastUsername() {
-        try (BufferedReader readerUserName = new BufferedReader(new FileReader("lastuser.txt"))) {
-            return readerUserName.readLine();
-        } catch (IOException e) {
-            return "";
-        }
     }
 
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry excluding="fr/classcord/ui/" kind="src" path="classcord-client/src/main/java"/>
+	<classpathentry kind="src" path="classcord-client/src/main/java/fr/classcord/ui"/>
+	<classpathentry kind="src" path="classcord-client/src/test/java"/>
+	<classpathentry kind="lib" path="classcord-client/target/classcord-client-1.0-SNAPSHOT.jar"/>
+	<classpathentry kind="output" path="classcord-client/target/classes"/>
+</classpath>

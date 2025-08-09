@@ -18,7 +18,7 @@
 Pendant cette journée, on configure les IDEs afin de pouvoir travailler en bon condition, on organise le package et on commence découvrir l'utilisation de VSCode en Java
 
 ## Fonctionnalités Dévelopées
-- Création du projet Maven dans VSCode.
+- Création du projet Maven dans VSCode, puis dans IntelliJ IDEA.
 - Configuration du fichier `pom.xml` avec la dépendance JSON.
 - Mise en place de la structure de packages selon le modèle MVC.
 - Implémentation des classes métier `User` et `Message`.
@@ -38,6 +38,7 @@ Pendant cette journée, on configure les IDEs afin de pouvoir travailler en bon 
 - Java 11 ou plus
 - J'ai installé le Maven sur mon ordinateur puis j'ai crée une variable d'environnement en  pointant vers le dossier Maven
 - J'ai installé dans VSCode les extensions liés à Java et à Maven
+- J'ai installé l'IntelliJ IDEA en Août 2025
 
 ### Étapes pour Configurer le Projet
 
@@ -118,7 +119,7 @@ En entrant le pseudo, adresse IP et port du serveur, l'utilisateur peut connecte
 
 ##  Architecture du projet
  **Packages** :
-- `fr.classcord.network` → Contient la classe `ClientInvite`.
+- `fr.classcord.controller` → Contient la classe `ClientInvite`.
 - `fr.classcord.model` → Gestion des messages JSON.
 - `fr.classcord.ui` → Interface Swing pour le chat qui contient la classe `ChatInterface`
 
@@ -325,7 +326,7 @@ Résumé de la deuxième journée:
 
 
 ##  Architecture du projet
-- `fr.classcord.network` → Contient la classe `ClientInvite`.
+- `fr.classcord.controller` → Contient la classe `ClientInvite`.
 - `fr.classcord.model` → Ajoute de la classe `CurrentUser`
 - `fr.classcord.ui` → Ajoute des classes: `ConnectToServeur`, `SelectionneInterface`, `LoginUI`, `ChatInterfacePerso`, `GuestUI`
 
@@ -509,7 +510,7 @@ Pendant cette journée afin de comprendre comment les utilisateurs sont identifi
 
 
 ##  Architecture du projet
-- `fr.classcord.network` → Contient la classe `ClientInvite`.
+- `fr.classcord.controller` → Contient la classe `ClientInvite`.
 - `fr.classcord.model` → Contient la classe `CurrentUser`, `Message`, `User`
 - `fr.classcord.ui` → Contient les classes: `ConnectToServeur`, `SelectionneInterface`, `LoginUI`, `ChatInterfacePerso`, `GuestUI`, `ChatInterface`
 
@@ -676,7 +677,7 @@ Dans l'affichage, j'ai utilisé "subtype" pour distinguer les types de messages.
         } catch (Exception e) {
             System.out.println("Erreur dans afficheMessage() " + e.getMessage());
         }
-```
+    ```
 
 **Mettre à jour le modèle objet**
 
@@ -792,7 +793,7 @@ La dernière journée, il a fallu gérer les statuts des utilisateurs, améliore
 - Envoie de ce statut au serveur et affichage de ce statut dans la liste des connectés.
 
 ##  Architecture du projet
-- `fr.classcord.network` → Contient la classe `ClientInvite`.
+- `fr.classcord.controller` → Contient la classe `ClientInvite`.
 - `fr.classcord.model` → Contient la classe `CurrentUser`, `Message`, `User`
 - `fr.classcord.ui` → Contient les classes: `ConnectToServeur`, `SelectionneInterface`, `LoginUI`, `ChatInterfacePerso`, `GuestUI`, `ChatInterface`
 
@@ -908,3 +909,47 @@ Résumé de la quatrième journée:
 - https://stackoverflow.com/questions/34719923/how-do-i-load-an-animated-gif-within-my-jframe-while-a-long-process-is-running
 - https://stackoverflow.com/questions/34262447/java-applet-setforeground-what-exactly-it-does-and-how-to-see-its-effect
 - Projet du Jeu en Java (Cours SLAM)
+
+
+# 📖 Jour EXTRA – Restructuration du projet
+
+**Réorganisation des packages dans IntelliJ IDEA afin de respecter l’architecture MVC, en repartant sur une nouvelle base de développement pour ce projet.** :
+
+
+
+    Voici la nouvelle structure:
+    ```
+      classcord-client/
+        ├── src/
+        │   ├── main/
+        │   │   ├── java/
+        │   │   │   ├── fr/
+        │   │   │   │   ├── classcord/
+        │   │   │   │   │   ├── controller/
+        │   │   │   │   │   │   ├── AuthController
+        │   │   │   │   │   │   ├── ChatController
+        │   │   │   │   │   │   ├── LoginController
+        │   │   │   │   │   │   ├── SessionController
+        │   │   │   │   │   ├── model/
+        │   │   │   │   │   │   ├── ClientInvite
+        │   │   │   │   │   │   ├── CurrentUser (inactif)
+        │   │   │   │   │   │   ├── User.java (inactif)
+        │   │   │   │   │   │   ├── Message.java (inactif)
+        │   │   │   │   │   │   ├── UserColorManager
+        │   │   │   │   │   ├── ui/
+        │   │   │   │   │   │   ├── ChatPersoUI
+        │   │   │   │   │   │   ├── ChatUI
+        │   │   │   │   │   │   ├── ChoixModeUI
+        │   │   │   │   │   │   ├── ConnectToServeurUI
+        │   │   │   │   │   │   ├── GuestUI
+        │   │   │   │   │   │   ├── LoginUI
+        │   │   │   │   │   │   ├── UserStatusRenderer
+        │   │   │   │   │   ├── app/
+        │   │   │   │   │   │   ├── App (inactif)
+        ├── pom.xml
+    ```
+    Puis j'ai créé les constructors, les getters et les setters dans les classes Message, et User
+
+
+Vérification de l’application en effectuant différents tests sur l’ensemble de ses fonctionnalités.
+(reste à vérifier son fonctionnalité multiclient en Septembre)

@@ -1,4 +1,4 @@
-package fr.classcord.network;
+package fr.classcord.model;
 
 import java.io.BufferedReader; //pour recevoir les messages
 import java.io.IOException; //pour envoyer les messages
@@ -9,15 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import javax.swing.SwingUtilities;
-
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import fr.classcord.model.Message;
-import fr.classcord.ui.ChatInterface;
-import fr.classcord.ui.ChatInterfacePerso;
-
+import fr.classcord.controller.ChatController;
+import fr.classcord.ui.ChatPersoUI;
+import fr.classcord.ui.ChatUI;
 
 
 // import org.json.JSONObject; //maven-ben benne van??? à faire quoi?
@@ -26,19 +22,17 @@ public class ClientInvite {
 
     //propriétés
     private Socket socket;
-    
     private PrintWriter writer;
     private BufferedReader reader;
     private String pseudo;
     private String lastMessage = "";
-    private ChatInterface chatInterface;
-    private ChatInterfacePerso chatInterfacePerso;
+    private ChatPersoUI chatPersoUI;
+    private ChatUI chatUI;
+    private ChatController controller;
     
     //suivre les utilisateurs et leur état en les stockant
     private final Map<String, String> userStatusMap = new HashMap<>(); //ex.: dodo online
 
-    
-    
 
     //Constructeur
     public ClientInvite(String pseudo){
@@ -49,8 +43,8 @@ public class ClientInvite {
     //méthodes
 
     //Connexion au serveur
+    //marad itt/ connectioncontroller l'appel -> puis connecToServeur
     public boolean connect(String ip, int port){
-        
         try {
             //création une connexion TCP entre client et serveur
             socket = new Socket(ip, port); 
@@ -64,17 +58,14 @@ public class ClientInvite {
 
             System.out.println("Connexté au serveur " + ip + " : " + port);
             return true;
-           
         } catch (IOException e) {
             System.out.println("Promblème pendant la connexion au servuer: " + e.getMessage());
-
             try {
                 //fermeture de la connexion en cas d'échec
                 if(socket != null){
                     socket.close(); 
                     //une connexion TCP ouvert consomme la mémoire et bloque les ports de réseau!!
                 }
-    
             } catch (IOException closException) {
                 System.out.println("Erreur pendant la fermeture de la connexion " + closException);
             }
@@ -82,10 +73,9 @@ public class ClientInvite {
         }
     }
 
-
-    public void setChatInterface(ChatInterface chatInterface){
-        this.chatInterface = chatInterface;
-        this.chatInterfacePerso = null; //désactiver chatInterfacePerso
+    public void setChatUI(ChatUI chatUI){
+        this.chatUI = chatUI;
+        this.chatPersoUI = null; //désactiver chatInterfacePerso
     }
 
     // public void setChatInterfacePerso(ChatInterfacePerso chatInterfacePerso){
@@ -93,9 +83,14 @@ public class ClientInvite {
     //     this.chatInterface = null; // désactiver chatInterface
     // }
 
-    public void setChatInterfacePerso(ChatInterfacePerso ui) {
-        this.chatInterfacePerso = ui;
+    public void setChatPersoUI(ChatPersoUI ui) {
+        this.chatPersoUI = ui;
     }
+
+    public void setController(ChatController controller) {
+        this.controller = controller;
+    }
+
    
     //Gestion de la réception des messages
     public void listenForMessages(){
@@ -113,56 +108,9 @@ public class ClientInvite {
                         JSONObject json = new JSONObject(line);
                         System.out.println("JSON reçu = " + json.toString(2));
 
-                        String type = json.optString("type");
-
-                        switch (type) {
-                            case "message" -> SwingUtilities.invokeLater(() -> {
-                                    if (chatInterfacePerso != null && chatInterfacePerso.isVisible()) {
-                                        chatInterfacePerso.afficheMessage();
-                                    } else if (chatInterface != null && chatInterface.isVisible()) {
-                                        chatInterface.afficheMessage();
-                                    }
-                                });
-                            
-                            case "status" -> {
-                                String username = json.optString("user");
-                                String statut = json.optString("state");
-
-                                userStatusMap.put(username, statut);
-
-                                if (chatInterfacePerso !=  null){
-                                    chatInterfacePerso.updateUserList(new HashMap<>(userStatusMap));
-                                }else if (chatInterface != null){
-                                    chatInterface.updateUserList(new HashMap<>(userStatusMap));
-                                }
-                            }
-
-                            case "users" -> {
-                                System.out.println("Liste complète reçu");
-                                JSONArray usersArray = json.optJSONArray("users");
-
-                                if(usersArray != null){
-                                    // Vider temporairement la map des utilisateurs (optionnel, selon ton besoin)
-                                    userStatusMap.clear();
-
-                                    for(int i = 0; i < usersArray.length(); i++){ //parcourt toutes les clés (pseudos) dans l'objet users
-                                        String pseudo = usersArray.optString(i);
-
-                                        // Ajouter chaque utilisateur avec statut "online" (puisque ce sont ceux connectés)
-                                        userStatusMap.put(pseudo, "online");
-                                    }
-
-                                    if (chatInterfacePerso !=  null){
-                                        chatInterfacePerso.updateUserList(new HashMap<>(userStatusMap)); //création des copies pour éviter les conflits
-                                    }else if (chatInterface != null){
-                                        chatInterface.updateUserList(new HashMap<>(userStatusMap));
-                                    }
-                                }else{
-                                    System.err.println("Réponse 'users' invalide: pas de champ de 'users'");
-                                }
-                            }
-                           
-                            default -> System.out.println("Type de message inconnu : " + type);
+                        //déléguer le traitement "switch" au contrôleur
+                        if(controller != null){
+                            controller.handleIncomingMessage(json);
                         }
                     }else{
                         break; //si le serveur ferme la connexion
@@ -175,7 +123,8 @@ public class ClientInvite {
         }).start();
     }
 
-     //envoie d'un message au format JSON au serveur
+   /*  //envoie d'un message au format JSON au serveur
+    // était utilisé au début en utilisant un message de type Message
     public void sendMessage(String messageText){
 
         if (pseudo == null || pseudo.isEmpty()) {
@@ -190,8 +139,9 @@ public class ClientInvite {
         }else{
             System.err.println("Impossible d'envoyer le message, la connexion est fermée.\n");
         }
-    }
+    }*/
 
+    // envoie un message JSON via un printwriter => exécution une action réseau
     public void notifyOnlineStatus() {
         if (writer != null && pseudo != null && !pseudo.isEmpty()) {
             JSONObject json = new JSONObject();
@@ -202,7 +152,8 @@ public class ClientInvite {
         }
     }
 
-    //envoie la requête de type "users"
+    //envoie une requête réseau pour obtenir la liste des utilisateurs
+    //utilisation des ressources internes: writer, socket
     public void requestUserList() {
         if (writer != null && socket != null && !socket.isClosed()) {
             JSONObject request = new JSONObject();
@@ -211,6 +162,10 @@ public class ClientInvite {
         } else {
             System.err.println("Impossible de demander la liste des utilisateurs, connexion non active.");
         }
+    }
+
+    public void send(String message) {
+        writer.println(message);
     }
 
     public void setPseudo(String pseudo){ 
@@ -225,11 +180,7 @@ public class ClientInvite {
         return lastMessage;
     }
 
-    public void send(String message) {
-        writer.println(message);
-    }
 
-    
     public BufferedReader getIn() {
         return reader;
     }

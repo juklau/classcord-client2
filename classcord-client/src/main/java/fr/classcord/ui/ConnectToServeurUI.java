@@ -3,20 +3,17 @@ package fr.classcord.ui;
  //Frame du connexion au serveur
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel; //gestion de la mise en page
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import fr.classcord.network.ClientInvite;
-
+import fr.classcord.controller.SessionController;
+//import fr.classcord.model.ClientInvite;
 
 
 public class ConnectToServeurUI extends JFrame {
@@ -25,11 +22,13 @@ public class ConnectToServeurUI extends JFrame {
     private final JTextField adresseIPServeur;
     private final JTextField adressePortServeur;
     private final JButton btnConnexionServeur;
-    private ClientInvite clientInvite;
-    
+    private final SessionController controller;
+
 
     //Constructor
     public ConnectToServeurUI(){
+        //ClientInvite clientInvite = new ClientInvite("invité");
+        controller = new SessionController();
 
         setTitle("Connexion au Serveur");
         setSize(400, 250);
@@ -49,57 +48,20 @@ public class ConnectToServeurUI extends JFrame {
         panel.add(new JLabel("Adresse Port: "));
         adressePortServeur = new JTextField("12345");
         panel.add(adressePortServeur);
-       
+
         btnConnexionServeur = new JButton("Connexion au Serveur");
         panel.add(new JLabel()); //pour espacement
         panel.add(btnConnexionServeur);
-        
+
         parentPanel.add(panel, BorderLayout.CENTER);
         add(parentPanel);
 
-        btnConnexionServeur.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                 System.out.println("Bouton 'Connexion au Serveur' cliqué !");
-                connectToServer();
-            }
+        btnConnexionServeur.addActionListener(e -> {
+            System.out.println("Bouton 'Connexion au Serveur' cliqué !");
+            controller.connecterAuServeur(adresseIPServeur.getText(), adressePortServeur.getText(), this);
         });
     }
 
-    //méthodes
-
-    private void connectToServer(){
-        String ip = adresseIPServeur.getText().trim();
-        int port;
-
-        try {
-            //transtypage de String en int
-            port = Integer.parseInt(adressePortServeur.getText().trim());
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Le port doit être un nombre valide !");
-            return;
-        }
-
-        if (!ip.isEmpty()) {
-            clientInvite = new ClientInvite("invité"); // Utilisation d’un pseudo temporaire
-            boolean connected = clientInvite.connect(ip, port);
-
-            if (connected) {
-                JOptionPane.showMessageDialog(this, "Connexion réussie au serveur " + ip + " : " + port);
-                dispose(); // Fermer ConnexionToServeur
-
-                if (clientInvite != null) {
-                        SwingUtilities.invokeLater(() -> new ChoixModeUI(clientInvite).setVisible(true));
-                    } else {
-                        System.err.println("Erreur : clientInvite est null !");
-                    }
-            } else {
-                JOptionPane.showMessageDialog(this, "Erreur de connexion au serveur.");
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Veuillez entrer une adresse IP valide !");
-        }
-    }
 
     //Deuxième et Troisième jour:17-18 juin 25 
     //Méthode principale pour la ConnectToServuerUI
@@ -109,6 +71,3 @@ public class ConnectToServeurUI extends JFrame {
         });
     }
 }
-
-
-

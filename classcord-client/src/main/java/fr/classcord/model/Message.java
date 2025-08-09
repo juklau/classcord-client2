@@ -37,6 +37,8 @@ public class Message{
     }
 
 
+    //methodes
+
     // getters/setters
     public String getType() {
         //this => fait référence à l'attribut de la classe// fait référence à l'objet courant
@@ -87,14 +89,10 @@ public class Message{
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
-
-   
-    //methodes
    
     //toujours faire toString
     //igy fogja kiirni, amikor hivom System.out.println();
 
-    
     // @Override
     // public String toString (){ //écriture en json
     //     return "Message{" +
@@ -106,13 +104,6 @@ public class Message{
     //         ", timestamp = '" + timestamp + '\'' +
     //     '}';
     // }
-
-     @Override
-    public String toString (){ //écriture en json
-        return "Message{" +
-            "content ='" + content + '\'' +
-        '}';
-    }
 
     //convertir l'objet message en JSONObject
     public JSONObject toJson(){
@@ -126,7 +117,7 @@ public class Message{
         return json;
     }
 
-    //Convertir une chaîne JSON en objet Message
+    //créer un objet à partir d’un JSON
     public static Message fromJson(String jsonString){
         JSONObject json = new JSONObject(jsonString);
         return new Message(       
@@ -139,19 +130,17 @@ public class Message{
         );
     }
 
+    //pour afficher
+    @Override
+    public String toString (){ //écriture en json
+        return "Message{" +
+                "content ='" + content + '\'' +
+                '}';
+    }
+
     // Explication
     // si je mets pas en mode static, il faudrait écrire comme ca:
     //     Message msg = new Message();
     //     Message converted = msg.fromJson(jsonString); // INUTILE
 
-
 }
-
-    
-
-
-
-
-
-
-
